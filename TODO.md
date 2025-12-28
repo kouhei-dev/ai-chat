@@ -2,12 +2,12 @@
 
 ## フェーズ1: プロジェクト初期設定
 
-- [ ] Next.jsプロジェクトの作成（App Router、TypeScript）
-- [ ] ESLint + Prettierの設定
-- [ ] Tailwind CSSの設定
-- [ ] 基本ディレクトリ構成の作成
-- [ ] 環境変数ファイル（.env.example）の作成
-- [ ] .gitignoreの設定
+- [x] Next.jsプロジェクトの作成（App Router、TypeScript）
+- [x] ESLint + Prettierの設定
+- [x] Tailwind CSSの設定
+- [x] 基本ディレクトリ構成の作成
+- [x] 環境変数ファイル（.env.example）の作成
+- [x] .gitignoreの設定
 
 ## フェーズ2: データベース設定
 
@@ -131,7 +131,7 @@
 
 | フェーズ | ステータス | 備考 |
 |----------|------------|------|
-| 1. プロジェクト初期設定 | 未着手 | |
+| 1. プロジェクト初期設定 | 完了 | Next.js 16.1.1 + TypeScript + Tailwind CSS |
 | 2. データベース設定 | 未着手 | |
 | 3. バックエンド実装 | 未着手 | |
 | 4. フロントエンド実装 | 未着手 | |

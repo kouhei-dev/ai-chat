@@ -65,39 +65,51 @@
 - **音声入力**: 不要
 - **会話履歴検索**: 不要
 
-## ディレクトリ構成（推奨）
+## ディレクトリ構成
 
 ```
 ai-chat/
-├── src/
-│   ├── app/                    # Next.js App Router
-│   │   ├── api/
-│   │   │   └── [[...route]]/   # Hono APIルート
-│   │   │       └── route.ts
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   ├── components/             # UIコンポーネント
-│   │   ├── chat/
-│   │   │   ├── ChatContainer.tsx
-│   │   │   ├── MessageList.tsx
-│   │   │   ├── MessageItem.tsx
-│   │   │   └── ChatInput.tsx
-│   │   └── ui/                 # 共通UIコンポーネント
-│   ├── lib/
-│   │   ├── db/                 # Prisma関連
-│   │   │   └── prisma.ts
-│   │   ├── mastra/             # Mastra設定
-│   │   │   └── agent.ts
-│   │   └── api/                # APIクライアント
-│   └── types/                  # 型定義
-├── prisma/
-│   └── schema.prisma
+├── CLAUDE.md                   # プロジェクト仕様書
+├── TODO.md                     # 実装計画
 ├── tests/
 │   ├── unit/                   # Vitestテスト
 │   └── e2e/                    # Playwrightテスト
-├── Dockerfile
-├── docker-compose.yml
-└── package.json
+└── app/                        # Next.jsプロジェクト
+    ├── src/
+    │   ├── app/                # Next.js App Router
+    │   │   ├── api/
+    │   │   │   └── [[...route]]/   # Hono APIルート
+    │   │   │       └── route.ts
+    │   │   ├── globals.css
+    │   │   ├── layout.tsx
+    │   │   └── page.tsx
+    │   ├── components/         # UIコンポーネント
+    │   │   ├── chat/
+    │   │   │   ├── ChatContainer.tsx
+    │   │   │   ├── MessageList.tsx
+    │   │   │   ├── MessageItem.tsx
+    │   │   │   └── ChatInput.tsx
+    │   │   └── ui/             # 共通UIコンポーネント
+    │   ├── lib/
+    │   │   ├── db/             # Prisma関連
+    │   │   │   └── prisma.ts
+    │   │   ├── mastra/         # Mastra設定
+    │   │   │   └── agent.ts
+    │   │   └── api/            # APIクライアント
+    │   └── types/              # 型定義
+    ├── prisma/
+    │   └── schema.prisma
+    ├── public/
+    ├── .env.example
+    ├── .gitignore
+    ├── .prettierrc
+    ├── eslint.config.mjs
+    ├── next.config.ts
+    ├── package.json
+    ├── postcss.config.mjs
+    ├── tsconfig.json
+    ├── Dockerfile
+    └── docker-compose.yml
 ```
 
 ## データモデル
@@ -226,6 +238,9 @@ NODE_ENV="development"
 ## セットアップ手順
 
 ```bash
+# appディレクトリに移動
+cd app
+
 # 依存関係インストール
 npm install
 
