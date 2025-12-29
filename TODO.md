@@ -23,26 +23,26 @@
 ## フェーズ3: バックエンド実装
 
 ### Hono設定
-- [ ] Honoのインストール
-- [ ] Next.js App Router上でのHonoルート設定（src/app/api/[[...route]]/route.ts）
+- [x] Honoのインストール
+- [x] Next.js App Router上でのHonoルート設定（src/app/api/[[...route]]/route.ts）
 
 ### Mastra + Claude API設定
-- [ ] Mastraのインストールと設定
-- [ ] Claude-4-sonnet用のエージェント設定（src/lib/mastra/agent.ts）
-- [ ] システムプロンプトの定義
+- [x] Mastraのインストールと設定
+- [x] Claude-4-sonnet用のエージェント設定（src/lib/mastra/agent.ts）
+- [x] システムプロンプトの定義
 
 ### セッション管理
-- [ ] セッションID生成ユーティリティの作成（UUIDv4）
-- [ ] セッション有効期限の設定（環境変数から取得）
-- [ ] POST /api/session エンドポイントの実装（セッション作成）
-- [ ] GET /api/session/:sessionId エンドポイントの実装（セッション検証）
-- [ ] 期限切れセッションのハンドリング
+- [x] セッションID生成ユーティリティの作成（UUIDv4）
+- [x] セッション有効期限の設定（環境変数から取得）
+- [x] POST /api/session エンドポイントの実装（セッション作成）
+- [x] GET /api/session/:sessionId エンドポイントの実装（セッション検証）
+- [x] 期限切れセッションのハンドリング
 
 ### APIエンドポイント
-- [ ] POST /api/chat エンドポイントの実装
-- [ ] リクエストバリデーション（セッションID検証を含む）
-- [ ] 会話履歴のDB保存処理
-- [ ] エラーハンドリング
+- [x] POST /api/chat エンドポイントの実装
+- [x] リクエストバリデーション（セッションID検証を含む）
+- [x] 会話履歴のDB保存処理
+- [x] エラーハンドリング
 
 ## フェーズ4: フロントエンド実装
 
@@ -133,7 +133,7 @@
 |----------|------------|------|
 | 1. プロジェクト初期設定 | 完了 | Next.js 16.1.1 + TypeScript + Tailwind CSS |
 | 2. データベース設定 | 完了 | Prisma 6 + MongoDB 7（Docker、レプリカセット構成） |
-| 3. バックエンド実装 | 未着手 | |
+| 3. バックエンド実装 | 完了 | Hono + Mastra + Claude API |
 | 4. フロントエンド実装 | 未着手 | |
 | 5. 状態管理・UX改善 | 未着手 | |
 | 6. テスト | 未着手 | |
