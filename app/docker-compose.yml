@@ -1,0 +1,22 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: ai-chat-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: ai-chat
+    # レプリカセットとして起動（Prismaのトランザクション機能に必要）
+    # 開発環境では認証なしで使用
+    command: ["--replSet", "rs0"]
+    healthcheck:
+      test: echo 'try { rs.status() } catch (err) { rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27017"}]}) }' | mongosh --port 27017 --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  mongodb_data:

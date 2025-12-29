@@ -209,6 +209,7 @@ model Message {
 - TypeScriptの厳格モード（strict: true）を使用
 - ESLint + Prettierでコード品質を維持
 - コンポーネントは関数コンポーネント + hooksパターン
+- **実装後は必ず `npm run lint:fix` と `npm run format` を実行すること**
 
 ### コミットメッセージ
 - 日本語で記述
@@ -223,7 +224,8 @@ model Message {
 
 ```env
 # データベース
-DATABASE_URL="mongodb://localhost:27017/ai-chat"
+# レプリカセット構成が必要（Prismaのトランザクション機能に必要）
+DATABASE_URL="mongodb://localhost:27017/ai-chat?replicaSet=rs0"
 
 # Anthropic API
 ANTHROPIC_API_KEY="your-api-key"
@@ -241,19 +243,52 @@ NODE_ENV="development"
 # appディレクトリに移動
 cd app
 
+# 環境変数ファイルの作成
+cp .env.example .env
+# .envファイルを編集し、ANTHROPIC_API_KEYを設定
+
 # 依存関係インストール
 npm install
 
+# MongoDB起動（Docker）
+docker compose up -d
+
+# MongoDBの起動を待つ（レプリカセット初期化に約30秒かかります）
+# ヘルスチェックが完了するまで待機
+docker compose ps  # STATUSが"healthy"になるまで待つ
+
 # Prisma初期化
-npx prisma generate
-npx prisma db push
+npm run db:generate  # Prismaクライアント生成
+npm run db:push      # スキーマをDBに反映
+
+# データベース接続テスト（オプション）
+npm run db:test
 
 # 開発サーバー起動
 npm run dev
+```
 
-# テスト実行
-npm run test        # 単体テスト
-npm run test:e2e    # E2Eテスト
+## NPMスクリプト
+
+| コマンド | 説明 |
+|----------|------|
+| `npm run dev` | 開発サーバー起動 |
+| `npm run build` | 本番ビルド |
+| `npm run start` | 本番サーバー起動 |
+| `npm run lint` | ESLintチェック |
+| `npm run lint:fix` | ESLint自動修正 |
+| `npm run format` | Prettier整形 |
+| `npm run format:check` | Prettier整形チェック |
+| `npm run db:generate` | Prismaクライアント生成 |
+| `npm run db:push` | スキーマをDBに反映 |
+| `npm run db:studio` | Prisma Studio起動（DBブラウザ） |
+| `npm run db:test` | データベース接続テスト |
+
+## テスト実行
+
+```bash
+npm run test        # 単体テスト（Vitest）
+npm run test:e2e    # E2Eテスト（Playwright）
 ```
 
 ## デプロイ手順

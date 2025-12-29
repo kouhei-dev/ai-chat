@@ -9,9 +9,15 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css}\""
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css}\"",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "db:test": "tsx scripts/test-db-connection.ts"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.1",
+    "dotenv": "^17.2.3",
     "next": "16.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3"
@@ -25,7 +31,9 @@
     "eslint-config-next": "16.1.1",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.7.4",
+    "prisma": "^6.19.1",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
