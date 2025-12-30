@@ -108,14 +108,14 @@
 ## フェーズ7: デプロイ準備
 
 ### Docker化
-- [ ] Dockerfileの作成
-- [ ] docker-compose.ymlの作成（ローカル開発用）
-- [ ] .dockerignoreの作成
+- [x] Dockerfileの作成
+- [x] docker-compose.ymlの更新（アプリサービス追加）
+- [x] .dockerignoreの作成
 
 ### Google Cloud Run設定
-- [ ] Cloud Run用の設定ファイル作成
-- [ ] 本番環境用環境変数の整理
-- [ ] デプロイスクリプトの作成
+- [x] Cloud Run用の設定ファイル作成（cloudbuild.yaml）
+- [x] 本番環境用環境変数の整理（.env.production.example）
+- [x] デプロイスクリプトの作成（scripts/deploy.sh）
 
 ## フェーズ8: ドキュメント・仕上げ
 
@@ -136,5 +136,5 @@
 | 4. フロントエンド実装 | 完了 | React + Tailwind CSS + レスポンシブ対応 |
 | 5. 状態管理・UX改善 | 完了 | フェーズ4で実装済み（セッション管理、状態管理、UX機能） |
 | 6. テスト | 完了 | Vitest（45件）+ Playwright（10件） |
-| 7. デプロイ準備 | 未着手 | |
+| 7. デプロイ準備 | 完了 | Docker + Cloud Run（cloudbuild.yaml, deploy.sh） |
 | 8. ドキュメント・仕上げ | 未着手 | |

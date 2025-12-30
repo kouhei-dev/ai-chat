@@ -71,9 +71,6 @@
 ai-chat/
 ├── CLAUDE.md                   # プロジェクト仕様書
 ├── TODO.md                     # 実装計画
-├── tests/
-│   ├── unit/                   # Vitestテスト
-│   └── e2e/                    # Playwrightテスト
 └── app/                        # Next.jsプロジェクト
     ├── src/
     │   ├── app/                # Next.js App Router
@@ -90,26 +87,51 @@ ai-chat/
     │   │   │   ├── MessageItem.tsx
     │   │   │   └── ChatInput.tsx
     │   │   └── ui/             # 共通UIコンポーネント
+    │   │       ├── Button.tsx
+    │   │       └── Loading.tsx
     │   ├── lib/
+    │   │   ├── api/            # APIクライアント・Honoアプリ
+    │   │   │   ├── app.ts      # Honoアプリ定義
+    │   │   │   └── chat.ts     # フロントエンド用APIクライアント
     │   │   ├── db/             # Prisma関連
     │   │   │   └── prisma.ts
     │   │   ├── mastra/         # Mastra設定
     │   │   │   └── agent.ts
-    │   │   └── api/            # APIクライアント
+    │   │   └── session/        # セッション管理
+    │   │       └── index.ts
     │   └── types/              # 型定義
+    ├── tests/                  # テストファイル
+    │   ├── setup.ts            # テストセットアップ
+    │   ├── unit/               # 単体テスト（Vitest）
+    │   │   ├── session.test.ts
+    │   │   ├── api.test.ts
+    │   │   └── components/
+    │   │       ├── Button.test.tsx
+    │   │       ├── ChatInput.test.tsx
+    │   │       └── MessageItem.test.tsx
+    │   └── e2e/                # E2Eテスト（Playwright）
+    │       └── chat.spec.ts
+    ├── scripts/                # スクリプト
+    │   ├── test-db-connection.ts
+    │   └── deploy.sh           # Cloud Runデプロイスクリプト
     ├── prisma/
     │   └── schema.prisma
     ├── public/
-    ├── .env.example
+    ├── .env.example            # 開発環境用環境変数テンプレート
+    ├── .env.production.example # 本番環境用環境変数テンプレート
     ├── .gitignore
+    ├── .dockerignore
     ├── .prettierrc
     ├── eslint.config.mjs
     ├── next.config.ts
     ├── package.json
     ├── postcss.config.mjs
     ├── tsconfig.json
-    ├── Dockerfile
-    └── docker-compose.yml
+    ├── vitest.config.ts        # Vitest設定
+    ├── playwright.config.ts    # Playwright設定
+    ├── Dockerfile              # 本番用Dockerイメージ
+    ├── docker-compose.yml      # ローカル開発用
+    └── cloudbuild.yaml         # Cloud Build設定
 ```
 
 ## データモデル
@@ -283,33 +305,106 @@ npm run dev
 | `npm run db:push` | スキーマをDBに反映 |
 | `npm run db:studio` | Prisma Studio起動（DBブラウザ） |
 | `npm run db:test` | データベース接続テスト |
+| `npm run test` | 単体テスト（Vitest、ウォッチモード） |
+| `npm run test:run` | 単体テスト（1回実行） |
+| `npm run test:coverage` | 単体テスト（カバレッジ付き） |
+| `npm run test:e2e` | E2Eテスト（Playwright） |
+| `npm run test:e2e:ui` | E2Eテスト（Playwright UIモード） |
 
 ## テスト実行
 
 ```bash
-npm run test        # 単体テスト（Vitest）
-npm run test:e2e    # E2Eテスト（Playwright）
+# 単体テスト（Vitest）
+npm run test          # ウォッチモード（開発中に使用）
+npm run test:run      # 1回実行（CI向け）
+npm run test:coverage # カバレッジレポート生成
+
+# E2Eテスト（Playwright）
+npm run test:e2e      # ヘッドレス実行
+npm run test:e2e:ui   # UIモード（デバッグ用）
 ```
+
+**注意**: E2Eテスト実行前に以下が必要です：
+- MongoDBが起動していること（`docker compose up -d`）
+- Playwrightのブラウザがインストールされていること（`npx playwright install chromium`）
+- システム依存ライブラリがインストールされていること（`sudo npx playwright install-deps chromium`）
 
 ## デプロイ手順
 
-### Google Cloud Run
-1. Google Cloud Project の作成
-2. Cloud Run の有効化
-3. Dockerfile の作成
-4. Dockerイメージをビルド
-5. Cloud Build でのイメージビルド
-6. Cloud Runにデプロイ
-7. 環境変数の設定
+### 前提条件
+- Google Cloud CLIがインストールされていること
+- Google Cloudプロジェクトが作成されていること
+- 以下のAPIが有効化されていること：
+  - Cloud Run API
+  - Cloud Build API
+  - Artifact Registry API
+
+### 方法1: デプロイスクリプトを使用（推奨）
 
 ```bash
-# ビルド & プッシュ
-gcloud builds submit --tag gcr.io/PROJECT_ID/ai-chat
+# appディレクトリで実行
+./scripts/deploy.sh YOUR_PROJECT_ID
+```
 
-# デプロイ
+スクリプトが自動で以下を実行します：
+1. Artifact Registryリポジトリの作成（初回のみ）
+2. Dockerイメージのビルド
+3. Artifact Registryへのプッシュ
+4. Cloud Runへのデプロイ
+
+### 方法2: Cloud Buildを使用（CI/CD向け）
+
+```bash
+# appディレクトリで実行
+gcloud builds submit --config cloudbuild.yaml
+```
+
+### 方法3: 手動デプロイ
+
+```bash
+# 変数設定
+PROJECT_ID="your-project-id"
+REGION="asia-northeast1"
+IMAGE_TAG="${REGION}-docker.pkg.dev/${PROJECT_ID}/ai-chat/ai-chat-app"
+
+# Artifact Registryリポジトリ作成（初回のみ）
+gcloud artifacts repositories create ai-chat \
+  --repository-format=docker \
+  --location=${REGION}
+
+# Dockerイメージビルド & プッシュ
+docker build -t ${IMAGE_TAG}:latest .
+docker push ${IMAGE_TAG}:latest
+
+# Cloud Runにデプロイ
 gcloud run deploy ai-chat \
-  --image gcr.io/PROJECT_ID/ai-chat \
+  --image ${IMAGE_TAG}:latest \
+  --region ${REGION} \
   --platform managed \
-  --region asia-northeast1 \
   --allow-unauthenticated
+```
+
+### 環境変数の設定（デプロイ後に必須）
+
+```bash
+gcloud run services update ai-chat \
+  --region asia-northeast1 \
+  --set-env-vars DATABASE_URL="mongodb+srv://user:pass@cluster.mongodb.net/ai-chat" \
+  --set-env-vars ANTHROPIC_API_KEY="sk-ant-api03-xxxxx" \
+  --set-env-vars SESSION_EXPIRY_HOURS=24
+```
+
+**注意**:
+- `DATABASE_URL`: 本番環境ではMongoDB Atlas等のマネージドサービスを推奨
+- `ANTHROPIC_API_KEY`: Anthropic Consoleから取得
+- 環境変数の詳細は `.env.production.example` を参照
+
+### ローカルで本番ビルドをテスト
+
+```bash
+# MongoDB + アプリを起動
+docker compose --profile prod up --build
+
+# アクセス
+open http://localhost:3000
 ```

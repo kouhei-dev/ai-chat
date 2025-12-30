@@ -1,4 +1,5 @@
 services:
+  # MongoDB（開発・本番共通）
   mongodb:
     image: mongo:7
     container_name: ai-chat-mongodb
@@ -17,6 +18,25 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+
+  # Next.jsアプリケーション（本番ビルドテスト用）
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-chat-app
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=mongodb://mongodb:27017/ai-chat?replicaSet=rs0&directConnection=true
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - SESSION_EXPIRY_HOURS=24
+      - NODE_ENV=production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    profiles:
+      - prod
 
 volumes:
   mongodb_data:

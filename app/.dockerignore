@@ -1,0 +1,40 @@
+# 依存関係
+node_modules
+npm-debug.log
+
+# Next.js ビルド出力
+.next
+out
+
+# テスト
+coverage
+playwright-report
+test-results
+
+# 環境変数（本番用は別途設定）
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ドキュメント
+README.md
+*.md
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
