@@ -16,6 +16,33 @@ REGION="asia-northeast1"
 REPOSITORY="ai-chat"
 IMAGE_NAME="ai-chat-app"
 SERVICE_NAME="ai-chat"
+ENV_FILE=".env.production"
+
+# .env.productionの存在チェック
+if [ ! -f "$ENV_FILE" ]; then
+    log_error "$ENV_FILE が見つかりません"
+    echo ".env.production.example をコピーして設定してください："
+    echo "  cp .env.production.example .env.production"
+    echo "  # .env.production を編集して値を設定"
+    exit 1
+fi
+
+# .env.productionを読み込み
+log_info "$ENV_FILE を読み込んでいます..."
+set -a
+source "$ENV_FILE"
+set +a
+
+# 必須環境変数のチェック
+MISSING_VARS=""
+[ -z "$DATABASE_URL" ] && MISSING_VARS="$MISSING_VARS DATABASE_URL"
+[ -z "$ANTHROPIC_API_KEY" ] && MISSING_VARS="$MISSING_VARS ANTHROPIC_API_KEY"
+[ -z "$CLEANUP_SECRET" ] && MISSING_VARS="$MISSING_VARS CLEANUP_SECRET"
+
+if [ -n "$MISSING_VARS" ]; then
+    log_error "必須環境変数が $ENV_FILE に設定されていません:$MISSING_VARS"
+    exit 1
+fi
 
 # プロジェクトIDチェック
 if [ -z "$PROJECT_ID" ]; then
@@ -62,6 +89,14 @@ log_info "イメージをArtifact Registryにプッシュ中..."
 docker push "${IMAGE_TAG}:${TIMESTAMP}"
 docker push "${IMAGE_TAG}:latest"
 
+# 環境変数の準備
+SESSION_EXPIRY_HOURS="${SESSION_EXPIRY_HOURS:-24}"
+ENV_VARS="NODE_ENV=production"
+ENV_VARS="${ENV_VARS},SESSION_EXPIRY_HOURS=${SESSION_EXPIRY_HOURS}"
+ENV_VARS="${ENV_VARS},DATABASE_URL=${DATABASE_URL}"
+ENV_VARS="${ENV_VARS},ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}"
+ENV_VARS="${ENV_VARS},CLEANUP_SECRET=${CLEANUP_SECRET}"
+
 # Cloud Runにデプロイ
 log_info "Cloud Runにデプロイ中..."
 gcloud run deploy "$SERVICE_NAME" \
@@ -69,7 +104,7 @@ gcloud run deploy "$SERVICE_NAME" \
     --region "$REGION" \
     --platform managed \
     --allow-unauthenticated \
-    --set-env-vars "NODE_ENV=production,SESSION_EXPIRY_HOURS=24" \
+    --set-env-vars "$ENV_VARS" \
     --memory 512Mi \
     --cpu 1 \
     --min-instances 0 \
@@ -82,13 +117,14 @@ log_success "URL: $SERVICE_URL"
 
 echo ""
 echo "================================================"
-echo "重要: 以下の環境変数をCloud Runで設定してください："
-echo "  - DATABASE_URL: MongoDBの接続URL"
-echo "  - ANTHROPIC_API_KEY: Anthropic APIキー"
+echo "【初回のみ】Cloud Scheduler設定（期限切れセッション削除の定期実行）:"
 echo ""
-echo "設定コマンド:"
-echo "  gcloud run services update $SERVICE_NAME \\"
-echo "    --region $REGION \\"
-echo "    --set-env-vars DATABASE_URL=<your-mongodb-url> \\"
-echo "    --set-env-vars ANTHROPIC_API_KEY=<your-api-key>"
+echo "  gcloud scheduler jobs create http cleanup-sessions \\"
+echo "    --location $REGION \\"
+echo "    --schedule \"0 3 * * *\" \\"
+echo "    --uri \"$SERVICE_URL/api/cleanup\" \\"
+echo "    --http-method POST \\"
+echo "    --headers \"Authorization=Bearer \$CLEANUP_SECRET\""
+echo ""
+echo "※ CLEANUP_SECRET は .env.production に設定した値を使用してください"
 echo "================================================"
