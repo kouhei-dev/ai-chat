@@ -1,7 +1,27 @@
 import { Hono } from 'hono';
-import { createSession, validateSession, getSessionById } from '@/lib/session';
+import {
+  createSession,
+  validateSession,
+  getSessionById,
+  cleanupExpiredSessions,
+} from '@/lib/session';
 import { generateResponse } from '@/lib/mastra/agent';
 import { prisma } from '@/lib/db/prisma';
+
+// 定数
+const MAX_MESSAGE_LENGTH = 400; // メッセージの最大文字数
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const OBJECT_ID_REGEX = /^[0-9a-f]{24}$/i;
+
+// UUIDv4形式の検証
+function isValidUUID(value: string): boolean {
+  return UUID_REGEX.test(value);
+}
+
+// MongoDB ObjectID形式の検証
+function isValidObjectId(value: string): boolean {
+  return OBJECT_ID_REGEX.test(value);
+}
 
 export const app = new Hono().basePath('/api');
 
@@ -51,16 +71,44 @@ app.get('/session/:sessionId', async (c) => {
 // POST /api/chat - チャットメッセージ送信
 app.post('/chat', async (c) => {
   try {
-    const body = await c.req.json();
+    // JSONパースエラーハンドリング
+    let body;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json({ error: 'リクエストボディが不正です' }, 400);
+    }
+
     const { message, sessionId, conversationId } = body;
 
-    // バリデーション
+    // メッセージのバリデーション
     if (!message || typeof message !== 'string') {
       return c.json({ error: 'メッセージは必須です' }, 400);
     }
 
+    const trimmedMessage = message.trim();
+    if (trimmedMessage.length === 0) {
+      return c.json({ error: 'メッセージを入力してください' }, 400);
+    }
+
+    if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
+      return c.json({ error: `メッセージは${MAX_MESSAGE_LENGTH}文字以内で入力してください` }, 400);
+    }
+
+    // セッションIDのバリデーション
     if (!sessionId || typeof sessionId !== 'string') {
       return c.json({ error: 'セッションIDは必須です' }, 400);
+    }
+
+    if (!isValidUUID(sessionId)) {
+      return c.json({ error: 'セッションIDの形式が不正です' }, 400);
+    }
+
+    // conversationIdのバリデーション（指定された場合）
+    if (conversationId !== undefined && conversationId !== null) {
+      if (typeof conversationId !== 'string' || !isValidObjectId(conversationId)) {
+        return c.json({ error: '会話IDの形式が不正です' }, 400);
+      }
     }
 
     // セッション検証
@@ -83,8 +131,12 @@ app.post('/chat', async (c) => {
     // 会話を取得または作成
     let conversation;
     if (conversationId) {
-      conversation = await prisma.conversation.findUnique({
-        where: { id: conversationId },
+      // セッション所有権を検証：sessionIdも条件に含める
+      conversation = await prisma.conversation.findFirst({
+        where: {
+          id: conversationId,
+          sessionId: session.id, // セッション所有権の検証
+        },
         include: {
           messages: {
             orderBy: { createdAt: 'asc' },
@@ -140,5 +192,39 @@ app.post('/chat', async (c) => {
   } catch (error) {
     console.error('Chat error:', error);
     return c.json({ error: 'チャット処理中にエラーが発生しました' }, 500);
+  }
+});
+
+// POST /api/cleanup - 期限切れセッションのクリーンアップ
+// Cloud Schedulerから定期実行される想定
+// 認証: Authorization: Bearer <CLEANUP_SECRET> ヘッダーが必要
+app.post('/cleanup', async (c) => {
+  try {
+    // 認証チェック
+    const authHeader = c.req.header('Authorization');
+    const cleanupSecret = process.env.CLEANUP_SECRET;
+
+    if (!cleanupSecret) {
+      console.error('CLEANUP_SECRET is not configured');
+      return c.json({ error: 'クリーンアップ機能が設定されていません' }, 503);
+    }
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return c.json({ error: '認証が必要です' }, 401);
+    }
+
+    const token = authHeader.substring(7); // 'Bearer ' の後ろを取得
+    if (token !== cleanupSecret) {
+      return c.json({ error: '認証に失敗しました' }, 403);
+    }
+
+    const deletedCount = await cleanupExpiredSessions();
+    return c.json({
+      message: '期限切れセッションを削除しました',
+      deletedCount,
+    });
+  } catch (error) {
+    console.error('Cleanup error:', error);
+    return c.json({ error: 'クリーンアップ処理中にエラーが発生しました' }, 500);
   }
 });

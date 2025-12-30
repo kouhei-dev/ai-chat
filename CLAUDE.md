@@ -225,6 +225,26 @@ model Message {
 }
 ```
 
+#### POST /api/cleanup
+期限切れセッションのクリーンアップ（Cloud Scheduler用）
+
+**認証**: `Authorization: Bearer <CLEANUP_SECRET>` ヘッダーが必要
+
+**レスポンス（成功時）**
+```json
+{
+  "message": "期限切れセッションを削除しました",
+  "deletedCount": 5
+}
+```
+
+**エラーレスポンス**
+| ステータス | 説明 |
+|------------|------|
+| 401 | 認証ヘッダーなし |
+| 403 | 認証トークン不正 |
+| 503 | CLEANUP_SECRET未設定 |
+
 ## 開発ガイドライン
 
 ### コーディング規約
@@ -254,6 +274,10 @@ ANTHROPIC_API_KEY="your-api-key"
 
 # セッション設定
 SESSION_EXPIRY_HOURS=24
+
+# クリーンアップ認証（Cloud Scheduler用）
+# 本番環境では強力なランダム文字列を設定
+CLEANUP_SECRET="your-cleanup-secret"
 
 # アプリケーション
 NODE_ENV="development"
@@ -395,6 +419,40 @@ gcloud run services update ai-chat \
 - `DATABASE_URL`: 本番環境ではMongoDB Atlas等のマネージドサービスを推奨
 - `ANTHROPIC_API_KEY`: Anthropic Consoleから取得
 - 環境変数の詳細は `.env.production.example` を参照
+
+### 期限切れセッションのクリーンアップ（Cloud Scheduler設定）
+
+期限切れセッションを定期的に削除するため、Cloud Schedulerを設定します。
+
+```bash
+# 1. シークレット生成（この値をメモしておく）
+CLEANUP_SECRET=$(openssl rand -hex 32)
+echo "CLEANUP_SECRET: ${CLEANUP_SECRET}"
+
+# 2. Cloud Runにシークレットを設定
+gcloud run services update ai-chat \
+  --region asia-northeast1 \
+  --set-env-vars CLEANUP_SECRET="${CLEANUP_SECRET}"
+
+# 3. Cloud Schedulerジョブを作成（毎日深夜3時に実行）
+SERVICE_URL=$(gcloud run services describe ai-chat --region asia-northeast1 --format 'value(status.url)')
+
+gcloud scheduler jobs create http cleanup-sessions \
+  --location asia-northeast1 \
+  --schedule "0 3 * * *" \
+  --uri "${SERVICE_URL}/api/cleanup" \
+  --http-method POST \
+  --headers "Authorization=Bearer ${CLEANUP_SECRET}"
+```
+
+**確認方法**:
+```bash
+# ジョブを手動で実行してテスト
+gcloud scheduler jobs run cleanup-sessions --location asia-northeast1
+
+# ログで結果を確認
+gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=ai-chat" --limit 10
+```
 
 ### ローカルで本番ビルドをテスト
 

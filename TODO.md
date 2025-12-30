@@ -145,21 +145,23 @@
 
 コードレビューにより特定された改善項目。優先度順に記載。
 
-### 🔴 Critical（セキュリティ・データ整合性）
+### 🔴 Critical（セキュリティ・データ整合性） ✅ 完了
 
 #### API入力バリデーション強化
-- [ ] メッセージの最大長制限を追加（src/lib/api/app.ts:54-60）
-- [ ] 空白のみのメッセージを拒否する検証を追加
-- [ ] conversationIdのUUID形式検証を追加
-- [ ] リクエストボディのJSON解析エラーハンドリング（400を返す）
+- [x] メッセージの最大長制限を追加（400文字）
+- [x] 空白のみのメッセージを拒否する検証を追加
+- [x] sessionIdのUUID形式検証を追加
+- [x] conversationIdのMongoDB ObjectId形式検証を追加
+- [x] リクエストボディのJSON解析エラーハンドリング（400を返す）
 
 #### セッション分離の強化
-- [ ] 会話取得時にsessionId所有権を検証（src/lib/api/app.ts:86-93）
-  - 現状: conversationIdのみで検索、他セッションの会話にアクセス可能
+- [x] 会話取得時にsessionId所有権を検証（findFirstでsessionIdも条件に含める）
 
 #### 期限切れセッションのクリーンアップ
-- [ ] 期限切れセッション削除の定期実行機能（TTLインデックスまたはバッチジョブ）
-- [ ] 関連するConversation/Messageのカスケード削除
+- [x] cleanupExpiredSessions関数の実装（src/lib/session/index.ts）
+- [x] POST /api/cleanup エンドポイントの追加（認証付き）
+- [x] 関連するConversation/Messageのカスケード削除（トランザクション使用）
+- [x] Cloud Scheduler設定手順をドキュメントに追記
 
 ### 🟠 High（機能・UX）
 
