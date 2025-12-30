@@ -25,25 +25,15 @@
 # appディレクトリに移動
 cd app
 
-# 依存関係インストール
-npm install
-
 # 環境変数設定
 cp .env.example .env
 # .envを編集してANTHROPIC_API_KEYを設定
 
-# MongoDB起動
-docker compose up -d
-
-# MongoDBが起動するまで待機（約30秒）
-docker compose ps  # STATUS: healthy になるまで待つ
-
-# データベース初期化
-npm run db:generate
-npm run db:push
+# 初期セットアップ（依存関係インストール、MongoDB起動、DB初期化）
+make init
 
 # 開発サーバー起動
-npm run dev
+make dev
 ```
 
 http://localhost:3000 でアプリにアクセスできます。
@@ -61,23 +51,22 @@ http://localhost:3000 でアプリにアクセスできます。
 
 | コマンド | 説明 |
 |----------|------|
-| `npm run dev` | 開発サーバー起動 |
-| `npm run build` | 本番ビルド |
-| `npm run lint:fix` | ESLint自動修正 |
-| `npm run format` | Prettier整形 |
-| `npm run test` | 単体テスト（ウォッチモード） |
-| `npm run test:run` | 単体テスト（1回実行） |
-| `npm run test:e2e` | E2Eテスト |
-| `npm run db:studio` | Prisma Studio（DBブラウザ） |
+| `make dev` | 開発サーバー起動 |
+| `make test` | 単体テスト（ウォッチモード） |
+| `make test-e2e` | E2Eテスト |
+| `make lint-fix` | ESLint自動修正 |
+| `make format` | Prettier整形 |
+| `make db-studio` | Prisma Studio（DBブラウザ） |
+| `make help` | 全コマンド一覧 |
 
 ## テスト
 
 ```bash
 # 単体テスト
-npm run test:run
+make test
 
 # E2Eテスト（事前にMongoDBが起動している必要があります）
-npm run test:e2e
+make test-e2e
 ```
 
 E2Eテスト実行前に以下が必要です：
@@ -91,7 +80,7 @@ sudo npx playwright install-deps chromium  # Linux
 Google Cloud Runへのデプロイ：
 
 ```bash
-./scripts/deploy.sh YOUR_PROJECT_ID
+make deploy PROJECT_ID=your-project-id
 ```
 
 デプロイ後、環境変数（DATABASE_URL, ANTHROPIC_API_KEY）の設定が必要です。

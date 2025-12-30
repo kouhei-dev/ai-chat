@@ -269,25 +269,22 @@ cd app
 cp .env.example .env
 # .envファイルを編集し、ANTHROPIC_API_KEYを設定
 
-# 依存関係インストール
-npm install
-
-# MongoDB起動（Docker）
-docker compose up -d
-
-# MongoDBの起動を待つ（レプリカセット初期化に約30秒かかります）
-# ヘルスチェックが完了するまで待機
-docker compose ps  # STATUSが"healthy"になるまで待つ
-
-# Prisma初期化
-npm run db:generate  # Prismaクライアント生成
-npm run db:push      # スキーマをDBに反映
-
-# データベース接続テスト（オプション）
-npm run db:test
+# 初期セットアップ（依存関係インストール、MongoDB起動、DB初期化）
+make init
 
 # 開発サーバー起動
-npm run dev
+make dev
+```
+
+### 手動セットアップ（makeが使用できない場合）
+
+```bash
+npm install                # 依存関係インストール
+docker compose up -d       # MongoDB起動
+# MongoDBが healthy になるまで待機（約30秒）
+npm run db:generate        # Prismaクライアント生成
+npm run db:push            # スキーマをDBに反映
+npm run dev                # 開発サーバー起動
 ```
 
 ## NPMスクリプト
