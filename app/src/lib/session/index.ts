@@ -1,15 +1,42 @@
 import { randomUUID } from 'crypto';
 import { prisma } from '../db/prisma';
 
-const SESSION_EXPIRY_HOURS = parseInt(process.env.SESSION_EXPIRY_HOURS || '24', 10);
+/**
+ * 環境変数からセッション有効期限（時間）を取得する
+ * @returns セッション有効期限（時間）
+ * @throws 環境変数が不正な値の場合
+ */
+function getSessionExpiryHours(): number {
+  const envValue = process.env.SESSION_EXPIRY_HOURS;
+
+  // 環境変数が未設定の場合はデフォルト値を返す
+  if (envValue === undefined || envValue === '') {
+    return 24;
+  }
+
+  const hours = parseInt(envValue, 10);
+
+  // 数値に変換できない場合はエラー
+  if (isNaN(hours)) {
+    throw new Error(`SESSION_EXPIRY_HOURS must be a valid number, got: ${envValue}`);
+  }
+
+  // 0以下の値はエラー
+  if (hours <= 0) {
+    throw new Error(`SESSION_EXPIRY_HOURS must be a positive number, got: ${hours}`);
+  }
+
+  return hours;
+}
 
 export function generateSessionId(): string {
   return randomUUID();
 }
 
 export function calculateExpiryDate(): Date {
+  const sessionExpiryHours = getSessionExpiryHours();
   const expiresAt = new Date();
-  expiresAt.setHours(expiresAt.getHours() + SESSION_EXPIRY_HOURS);
+  expiresAt.setHours(expiresAt.getHours() + sessionExpiryHours);
   return expiresAt;
 }
 
