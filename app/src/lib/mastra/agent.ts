@@ -1,4 +1,5 @@
 import { Agent } from '@mastra/core/agent';
+import type { CoreMessage } from 'ai';
 
 const SYSTEM_PROMPT = `あなたはフレンドリーなAIアシスタントです。
 ユーザーとの会話を楽しみ、質問に丁寧に答えてください。
@@ -20,9 +21,9 @@ export async function generateResponse(
   message: string,
   conversationHistory: { role: 'user' | 'assistant'; content: string }[] = []
 ): Promise<string> {
-  const messages = [
+  const messages: CoreMessage[] = [
     ...conversationHistory.map((msg) => ({
-      role: msg.role as 'user' | 'assistant',
+      role: msg.role,
       content: msg.content,
     })),
     { role: 'user' as const, content: message },
