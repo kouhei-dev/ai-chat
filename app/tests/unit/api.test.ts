@@ -35,6 +35,7 @@ const { mockPrisma } = vi.hoisted(() => ({
     message: {
       create: vi.fn(),
     },
+    $runCommandRaw: vi.fn(),
   },
 }));
 
@@ -53,12 +54,54 @@ describe('API Endpoints', () => {
   });
 
   describe('GET /api/health', () => {
-    it('ステータスokを返す', async () => {
+    const originalAnthropicKey = process.env.ANTHROPIC_API_KEY;
+
+    afterEach(() => {
+      if (originalAnthropicKey !== undefined) {
+        process.env.ANTHROPIC_API_KEY = originalAnthropicKey;
+      } else {
+        delete process.env.ANTHROPIC_API_KEY;
+      }
+    });
+
+    it('DB接続成功かつ環境変数設定済みの場合healthyを返す', async () => {
+      process.env.ANTHROPIC_API_KEY = 'sk-test-key';
+      mockPrisma.$runCommandRaw.mockResolvedValue({ ok: 1 });
+
       const res = await client.api.health.$get();
       const json = await res.json();
 
       expect(res.status).toBe(200);
-      expect(json).toEqual({ status: 'ok' });
+      expect(json.status).toBe('healthy');
+      expect(json.checks.database.status).toBe('connected');
+      expect(json.checks.configuration.anthropicApiKey).toBe('configured');
+      expect(json.timestamp).toBeDefined();
+      expect(json.responseTime).toBeDefined();
+    });
+
+    it('DB接続失敗の場合unhealthyを返す', async () => {
+      process.env.ANTHROPIC_API_KEY = 'sk-test-key';
+      mockPrisma.$runCommandRaw.mockRejectedValue(new Error('Connection failed'));
+
+      const res = await client.api.health.$get();
+      const json = await res.json();
+
+      expect(res.status).toBe(503);
+      expect(json.status).toBe('unhealthy');
+      expect(json.checks.database.status).toBe('disconnected');
+      expect(json.checks.database.error).toBe('Connection failed');
+    });
+
+    it('ANTHROPIC_API_KEY未設定の場合unhealthyを返す', async () => {
+      delete process.env.ANTHROPIC_API_KEY;
+      mockPrisma.$runCommandRaw.mockResolvedValue({ ok: 1 });
+
+      const res = await client.api.health.$get();
+      const json = await res.json();
+
+      expect(res.status).toBe(503);
+      expect(json.status).toBe('unhealthy');
+      expect(json.checks.configuration.anthropicApiKey).toBe('missing');
     });
   });
 

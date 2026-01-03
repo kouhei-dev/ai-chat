@@ -25,9 +25,47 @@ function isValidObjectId(value: string): boolean {
 
 export const app = new Hono().basePath('/api');
 
-// Health check endpoint
-app.get('/health', (c) => {
-  return c.json({ status: 'ok' });
+// Health check endpoint with database connection verification
+app.get('/health', async (c) => {
+  const startTime = Date.now();
+
+  // 環境変数チェック
+  const anthropicApiKeyConfigured = !!process.env.ANTHROPIC_API_KEY;
+
+  // データベース接続チェック
+  let dbStatus: 'connected' | 'disconnected' = 'disconnected';
+  let dbError: string | undefined;
+
+  try {
+    // シンプルなクエリでDB接続を確認
+    await prisma.$runCommandRaw({ ping: 1 });
+    dbStatus = 'connected';
+  } catch (error) {
+    dbError = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Health check - DB connection error:', dbError);
+  }
+
+  const responseTime = Date.now() - startTime;
+
+  // 全体のステータス判定
+  const isHealthy = dbStatus === 'connected' && anthropicApiKeyConfigured;
+
+  const response = {
+    status: isHealthy ? 'healthy' : 'unhealthy',
+    timestamp: new Date().toISOString(),
+    responseTime: `${responseTime}ms`,
+    checks: {
+      database: {
+        status: dbStatus,
+        ...(dbError && { error: dbError }),
+      },
+      configuration: {
+        anthropicApiKey: anthropicApiKeyConfigured ? 'configured' : 'missing',
+      },
+    },
+  };
+
+  return c.json(response, isHealthy ? 200 : 503);
 });
 
 // POST /api/session - 新規セッション作成
