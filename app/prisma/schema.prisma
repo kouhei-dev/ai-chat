@@ -18,24 +18,34 @@ model Session {
   expiresAt     DateTime
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+
+  @@index([expiresAt]) // クリーンアップクエリ用インデックス
 }
 
 // 会話
 model Conversation {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
   sessionId String    @db.ObjectId
-  session   Session   @relation(fields: [sessionId], references: [id])
+  session   Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   messages  Message[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  @@index([sessionId]) // セッション別会話取得用インデックス
+}
+
+// メッセージの役割
+enum MessageRole {
+  user
+  assistant
 }
 
 // メッセージ
 model Message {
   id             String       @id @default(auto()) @map("_id") @db.ObjectId
   conversationId String       @db.ObjectId
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
-  role           String       // "user" | "assistant"
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           MessageRole
   content        String
   createdAt      DateTime     @default(now())
 }

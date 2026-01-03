@@ -206,7 +206,7 @@ app.post('/chat', async (c) => {
 
     // 会話履歴を準備
     const conversationHistory = conversation.messages.map((msg) => ({
-      role: msg.role as 'user' | 'assistant',
+      role: msg.role,
       content: msg.content,
     }));
 

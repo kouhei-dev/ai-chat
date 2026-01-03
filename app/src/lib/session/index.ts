@@ -111,57 +111,15 @@ export async function getSessionById(sessionId: string) {
 
 /**
  * 期限切れセッションとその関連データ（Conversation, Message）を削除する
+ * カスケード削除により、Session削除時にConversation→Messageも自動削除される
  * @returns 削除されたセッション数
  */
 export async function cleanupExpiredSessions(): Promise<number> {
-  const now = new Date();
-
-  // 期限切れセッションを取得
-  const expiredSessions = await prisma.session.findMany({
+  const result = await prisma.session.deleteMany({
     where: {
-      expiresAt: { lt: now },
+      expiresAt: { lt: new Date() },
     },
-    select: { id: true },
   });
 
-  if (expiredSessions.length === 0) {
-    return 0;
-  }
-
-  const sessionIds = expiredSessions.map((s) => s.id);
-
-  // 関連する会話を取得
-  const conversations = await prisma.conversation.findMany({
-    where: {
-      sessionId: { in: sessionIds },
-    },
-    select: { id: true },
-  });
-
-  const conversationIds = conversations.map((c) => c.id);
-
-  // トランザクションで関連データを削除
-  // 順序: Messages → Conversations → Sessions
-  await prisma.$transaction([
-    // メッセージを削除
-    prisma.message.deleteMany({
-      where: {
-        conversationId: { in: conversationIds },
-      },
-    }),
-    // 会話を削除
-    prisma.conversation.deleteMany({
-      where: {
-        sessionId: { in: sessionIds },
-      },
-    }),
-    // セッションを削除
-    prisma.session.deleteMany({
-      where: {
-        id: { in: sessionIds },
-      },
-    }),
-  ]);
-
-  return expiredSessions.length;
+  return result.count;
 }
