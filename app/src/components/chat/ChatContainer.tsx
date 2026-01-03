@@ -20,6 +20,7 @@ export function ChatContainer() {
   const [error, setError] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [failedMessage, setFailedMessage] = useState<string | null>(null);
 
   // セッションの初期化
   const initializeSession = useCallback(async () => {
@@ -74,6 +75,7 @@ export function ChatContainer() {
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
     setError(null);
+    setFailedMessage(null);
 
     try {
       const response = await sendMessage({
@@ -97,9 +99,20 @@ export function ChatContainer() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'メッセージの送信に失敗しました';
       setError(errorMessage);
+      setFailedMessage(content);
       console.error('Message send error:', err);
+
+      // 失敗したメッセージを削除
+      setMessages((prev) => prev.filter((msg) => msg.id !== userMessage.id));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // リトライ処理
+  const handleRetry = () => {
+    if (failedMessage) {
+      handleSend(failedMessage);
     }
   };
 
@@ -124,7 +137,18 @@ export function ChatContainer() {
       {/* エラー表示 */}
       {error && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 mx-4 mt-4 rounded">
-          <p className="text-red-700 text-sm">{error}</p>
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-red-700 text-sm flex-1">{error}</p>
+            {failedMessage && (
+              <button
+                onClick={handleRetry}
+                disabled={isLoading}
+                className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+              >
+                再送信
+              </button>
+            )}
+          </div>
         </div>
       )}
 

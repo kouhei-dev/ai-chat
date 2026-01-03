@@ -165,10 +165,10 @@
 
 ### 🟠 High（機能・UX）
 
-#### エラーリカバリー
-- [ ] メッセージ送信失敗時のリトライボタン追加（ChatContainer.tsx）
-- [ ] APIリクエストのタイムアウト設定（現状: 無制限）
-- [ ] React Error Boundaryコンポーネントの追加
+#### エラーリカバリー ✅ 完了
+- [x] メッセージ送信失敗時のリトライボタン追加（ChatContainer.tsx）
+- [x] APIリクエストのタイムアウト設定（30秒/60秒、chat.ts）
+- [x] React Error Boundaryコンポーネントの追加（layout.tsxで適用済み）
 
 #### 入力制御
 - [ ] メッセージ入力の最大文字数表示・制限（ChatInput.tsx）
