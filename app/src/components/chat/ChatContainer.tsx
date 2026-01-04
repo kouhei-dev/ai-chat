@@ -6,6 +6,7 @@ import { ChatInput } from './ChatInput';
 import { Loading } from '../ui/Loading';
 import { Message } from './MessageItem';
 import { createSession, validateSession, sendMessage, SessionResponse } from '@/lib/api/chat';
+import { safeGetItem, safeSetItem, safeRemoveItem } from '@/lib/storage';
 
 const SESSION_KEY = 'ai-chat-session-id';
 
@@ -28,8 +29,8 @@ export function ChatContainer() {
       setIsInitializing(true);
       setError(null);
 
-      // localStorageからセッションIDを取得
-      const storedSessionId = localStorage.getItem(SESSION_KEY);
+      // localStorageからセッションIDを取得（エラーハンドリング付き）
+      const storedSessionId = safeGetItem(SESSION_KEY);
 
       if (storedSessionId) {
         // 既存セッションの検証
@@ -40,12 +41,17 @@ export function ChatContainer() {
           return;
         }
         // 無効なセッションは削除
-        localStorage.removeItem(SESSION_KEY);
+        safeRemoveItem(SESSION_KEY);
       }
 
       // 新規セッションの作成
       const session: SessionResponse = await createSession();
-      localStorage.setItem(SESSION_KEY, session.sessionId);
+      // セッションIDをlocalStorageに保存（失敗しても処理は続行）
+      if (!safeSetItem(SESSION_KEY, session.sessionId)) {
+        console.warn(
+          'セッションIDの保存に失敗しました。ページを再読み込みすると新しいセッションが作成されます。'
+        );
+      }
       setSessionId(session.sessionId);
     } catch (err) {
       setError('セッションの初期化に失敗しました。ページを再読み込みしてください。');

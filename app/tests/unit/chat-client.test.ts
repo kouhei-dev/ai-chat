@@ -36,7 +36,7 @@ describe('chat.ts API Client', () => {
       };
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve(mockSessionResponse),
+        text: () => Promise.resolve(JSON.stringify(mockSessionResponse)),
       });
 
       const promise = createSession();
@@ -90,7 +90,7 @@ describe('chat.ts API Client', () => {
       };
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve(mockSessionResponse),
+        text: () => Promise.resolve(JSON.stringify(mockSessionResponse)),
       });
 
       const promise = createSession();
@@ -104,11 +104,13 @@ describe('chat.ts API Client', () => {
     it('DEFAULT_TIMEOUTを使用する', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () =>
-          Promise.resolve({
-            sessionId: 'test',
-            expiresAt: '2024-01-01',
-          }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              sessionId: 'test',
+              expiresAt: '2024-01-01',
+            })
+          ),
       });
 
       const promise = createSession();
@@ -124,7 +126,7 @@ describe('chat.ts API Client', () => {
     it('APIエラー時に例外を投げる', async () => {
       mockFetch.mockResolvedValue({
         ok: false,
-        json: () => Promise.resolve({ error: 'サーバーエラー' }),
+        text: () => Promise.resolve(JSON.stringify({ error: 'サーバーエラー' })),
       });
 
       const promise = createSession();
@@ -137,7 +139,7 @@ describe('chat.ts API Client', () => {
     it('エラーメッセージが無い場合デフォルトメッセージを表示', async () => {
       mockFetch.mockResolvedValue({
         ok: false,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       });
 
       const promise = createSession();
@@ -157,7 +159,7 @@ describe('chat.ts API Client', () => {
       };
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve(mockValidationResponse),
+        text: () => Promise.resolve(JSON.stringify(mockValidationResponse)),
       });
 
       const promise = validateSession('550e8400-e29b-41d4-a716-446655440000');
@@ -171,12 +173,14 @@ describe('chat.ts API Client', () => {
     it('DEFAULT_TIMEOUTを使用する', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () =>
-          Promise.resolve({
-            valid: true,
-            sessionId: 'test',
-            expiresAt: '2024-01-01',
-          }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              valid: true,
+              sessionId: 'test',
+              expiresAt: '2024-01-01',
+            })
+          ),
       });
 
       const promise = validateSession('test-session');
@@ -192,7 +196,7 @@ describe('chat.ts API Client', () => {
     it('無効なセッションの場合valid=falseを返す', async () => {
       mockFetch.mockResolvedValue({
         ok: false,
-        json: () => Promise.resolve({ error: 'セッションが期限切れです' }),
+        text: () => Promise.resolve(JSON.stringify({ error: 'セッションが期限切れです' })),
       });
 
       const promise = validateSession('expired-session');
@@ -206,7 +210,7 @@ describe('chat.ts API Client', () => {
     it('エラーメッセージが無い場合デフォルトメッセージを表示', async () => {
       mockFetch.mockResolvedValue({
         ok: false,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       });
 
       const promise = validateSession('invalid-session');
@@ -227,7 +231,7 @@ describe('chat.ts API Client', () => {
       };
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve(mockChatResponse),
+        text: () => Promise.resolve(JSON.stringify(mockChatResponse)),
       });
 
       const promise = sendMessage({
@@ -244,12 +248,14 @@ describe('chat.ts API Client', () => {
     it('CHAT_TIMEOUTを使用する（AI応答待ちを考慮した長めのタイムアウト）', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () =>
-          Promise.resolve({
-            response: 'テスト応答',
-            conversationId: 'conv-123',
-            sessionId: 'session-id',
-          }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              response: 'テスト応答',
+              conversationId: 'conv-123',
+              sessionId: 'session-id',
+            })
+          ),
       });
 
       const promise = sendMessage({
@@ -268,7 +274,7 @@ describe('chat.ts API Client', () => {
     it('APIエラー時に例外を投げる', async () => {
       mockFetch.mockResolvedValue({
         ok: false,
-        json: () => Promise.resolve({ error: 'メッセージの処理に失敗しました' }),
+        text: () => Promise.resolve(JSON.stringify({ error: 'メッセージの処理に失敗しました' })),
       });
 
       const promise = sendMessage({
@@ -307,7 +313,7 @@ describe('chat.ts API Client', () => {
       };
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve(mockChatResponse),
+        text: () => Promise.resolve(JSON.stringify(mockChatResponse)),
       });
 
       const _promise = sendMessage({
@@ -336,11 +342,13 @@ describe('chat.ts API Client', () => {
     it('リクエストにAbortSignalを渡す', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () =>
-          Promise.resolve({
-            sessionId: 'test',
-            expiresAt: '2024-01-01',
-          }),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({
+              sessionId: 'test',
+              expiresAt: '2024-01-01',
+            })
+          ),
       });
 
       const _promise = createSession();

@@ -186,10 +186,10 @@
 - [x] Message.roleをEnum型に変更（prisma/schema.prisma:38）
 - [x] onDelete: Cascadeの設定（Conversation→Message）
 
-#### エラーハンドリング統一
-- [ ] API エラーレスポンス形式の統一（エラーコード体系）
-- [ ] フロントエンドのJSON解析エラーハンドリング（chat.ts）
-- [ ] localStorage操作のエラーハンドリング（quota超過対策）
+#### エラーハンドリング統一 ✅ 完了
+- [x] API エラーレスポンス形式の統一（エラーコード体系）
+- [x] フロントエンドのJSON解析エラーハンドリング（chat.ts）
+- [x] localStorage操作のエラーハンドリング（quota超過対策）
 
 #### テストカバレッジ拡充
 - [ ] ChatContainerコンポーネントのテスト追加

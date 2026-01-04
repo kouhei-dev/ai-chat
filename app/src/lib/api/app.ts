@@ -7,6 +7,7 @@ import {
 } from '@/lib/session';
 import { generateResponse } from '@/lib/mastra/agent';
 import { prisma } from '@/lib/db/prisma';
+import { ErrorCodes, createErrorResponse } from './errors';
 
 // 定数
 const MAX_MESSAGE_LENGTH = 400; // メッセージの最大文字数
@@ -75,7 +76,10 @@ app.post('/session', async (c) => {
     return c.json({ sessionId, expiresAt: expiresAt.toISOString() });
   } catch (error) {
     console.error('Session creation error:', error);
-    return c.json({ error: 'セッションの作成に失敗しました' }, 500);
+    return c.json(
+      createErrorResponse(ErrorCodes.SESSION_CREATE_FAILED, 'セッションの作成に失敗しました'),
+      500
+    );
   }
 });
 
@@ -90,6 +94,7 @@ app.get('/session/:sessionId', async (c) => {
         {
           valid: false,
           message: result.message || 'セッションが無効または期限切れです',
+          code: ErrorCodes.SESSION_INVALID,
         },
         400
       );
@@ -102,7 +107,10 @@ app.get('/session/:sessionId', async (c) => {
     });
   } catch (error) {
     console.error('Session validation error:', error);
-    return c.json({ error: 'セッションの検証に失敗しました' }, 500);
+    return c.json(
+      createErrorResponse(ErrorCodes.SESSION_VALIDATE_FAILED, 'セッションの検証に失敗しました'),
+      500
+    );
   }
 });
 
@@ -114,38 +122,59 @@ app.post('/chat', async (c) => {
     try {
       body = await c.req.json();
     } catch {
-      return c.json({ error: 'リクエストボディが不正です' }, 400);
+      return c.json(
+        createErrorResponse(ErrorCodes.INVALID_REQUEST_BODY, 'リクエストボディが不正です'),
+        400
+      );
     }
 
     const { message, sessionId, conversationId } = body;
 
     // メッセージのバリデーション
     if (!message || typeof message !== 'string') {
-      return c.json({ error: 'メッセージは必須です' }, 400);
+      return c.json(createErrorResponse(ErrorCodes.MISSING_MESSAGE, 'メッセージは必須です'), 400);
     }
 
     const trimmedMessage = message.trim();
     if (trimmedMessage.length === 0) {
-      return c.json({ error: 'メッセージを入力してください' }, 400);
+      return c.json(
+        createErrorResponse(ErrorCodes.EMPTY_MESSAGE, 'メッセージを入力してください'),
+        400
+      );
     }
 
     if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
-      return c.json({ error: `メッセージは${MAX_MESSAGE_LENGTH}文字以内で入力してください` }, 400);
+      return c.json(
+        createErrorResponse(
+          ErrorCodes.MESSAGE_TOO_LONG,
+          `メッセージは${MAX_MESSAGE_LENGTH}文字以内で入力してください`
+        ),
+        400
+      );
     }
 
     // セッションIDのバリデーション
     if (!sessionId || typeof sessionId !== 'string') {
-      return c.json({ error: 'セッションIDは必須です' }, 400);
+      return c.json(
+        createErrorResponse(ErrorCodes.MISSING_SESSION_ID, 'セッションIDは必須です'),
+        400
+      );
     }
 
     if (!isValidUUID(sessionId)) {
-      return c.json({ error: 'セッションIDの形式が不正です' }, 400);
+      return c.json(
+        createErrorResponse(ErrorCodes.INVALID_SESSION_ID_FORMAT, 'セッションIDの形式が不正です'),
+        400
+      );
     }
 
     // conversationIdのバリデーション（指定された場合）
     if (conversationId !== undefined && conversationId !== null) {
       if (typeof conversationId !== 'string' || !isValidObjectId(conversationId)) {
-        return c.json({ error: '会話IDの形式が不正です' }, 400);
+        return c.json(
+          createErrorResponse(ErrorCodes.INVALID_CONVERSATION_ID_FORMAT, '会話IDの形式が不正です'),
+          400
+        );
       }
     }
 
@@ -153,9 +182,10 @@ app.post('/chat', async (c) => {
     const sessionResult = await validateSession(sessionId);
     if (!sessionResult.valid) {
       return c.json(
-        {
-          error: sessionResult.message || 'セッションが無効または期限切れです',
-        },
+        createErrorResponse(
+          ErrorCodes.SESSION_INVALID,
+          sessionResult.message || 'セッションが無効または期限切れです'
+        ),
         401
       );
     }
@@ -163,7 +193,10 @@ app.post('/chat', async (c) => {
     // セッション情報を取得
     const session = await getSessionById(sessionId);
     if (!session) {
-      return c.json({ error: 'セッションが見つかりません' }, 404);
+      return c.json(
+        createErrorResponse(ErrorCodes.SESSION_NOT_FOUND, 'セッションが見つかりません'),
+        404
+      );
     }
 
     // 会話を取得または作成
@@ -182,7 +215,10 @@ app.post('/chat', async (c) => {
         },
       });
       if (!conversation) {
-        return c.json({ error: '会話が見つかりません' }, 404);
+        return c.json(
+          createErrorResponse(ErrorCodes.CONVERSATION_NOT_FOUND, '会話が見つかりません'),
+          404
+        );
       }
     } else {
       conversation = await prisma.conversation.create({
@@ -229,7 +265,10 @@ app.post('/chat', async (c) => {
     });
   } catch (error) {
     console.error('Chat error:', error);
-    return c.json({ error: 'チャット処理中にエラーが発生しました' }, 500);
+    return c.json(
+      createErrorResponse(ErrorCodes.CHAT_ERROR, 'チャット処理中にエラーが発生しました'),
+      500
+    );
   }
 });
 
@@ -244,16 +283,22 @@ app.post('/cleanup', async (c) => {
 
     if (!cleanupSecret) {
       console.error('CLEANUP_SECRET is not configured');
-      return c.json({ error: 'クリーンアップ機能が設定されていません' }, 503);
+      return c.json(
+        createErrorResponse(
+          ErrorCodes.CLEANUP_NOT_CONFIGURED,
+          'クリーンアップ機能が設定されていません'
+        ),
+        503
+      );
     }
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return c.json({ error: '認証が必要です' }, 401);
+      return c.json(createErrorResponse(ErrorCodes.AUTH_REQUIRED, '認証が必要です'), 401);
     }
 
     const token = authHeader.substring(7); // 'Bearer ' の後ろを取得
     if (token !== cleanupSecret) {
-      return c.json({ error: '認証に失敗しました' }, 403);
+      return c.json(createErrorResponse(ErrorCodes.AUTH_FAILED, '認証に失敗しました'), 403);
     }
 
     const deletedCount = await cleanupExpiredSessions();
@@ -263,6 +308,9 @@ app.post('/cleanup', async (c) => {
     });
   } catch (error) {
     console.error('Cleanup error:', error);
-    return c.json({ error: 'クリーンアップ処理中にエラーが発生しました' }, 500);
+    return c.json(
+      createErrorResponse(ErrorCodes.CLEANUP_ERROR, 'クリーンアップ処理中にエラーが発生しました'),
+      500
+    );
   }
 });

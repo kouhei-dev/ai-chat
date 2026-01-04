@@ -24,9 +24,25 @@ export interface ChatResponse {
 
 export interface ApiError {
   error: string;
+  code?: string;
 }
 
 const API_BASE = '/api';
+
+/**
+ * レスポンスをJSONとしてパースする（エラーハンドリング付き）
+ */
+async function parseJsonResponse<T>(response: Response): Promise<T> {
+  const text = await response.text();
+  if (!text) {
+    throw new Error('サーバーからの応答が空です');
+  }
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error('サーバーからの応答を解析できませんでした');
+  }
+}
 
 // タイムアウト設定（ミリ秒）
 export const DEFAULT_TIMEOUT = 30000; // 30秒
@@ -68,11 +84,11 @@ export async function createSession(): Promise<SessionResponse> {
   });
 
   if (!response.ok) {
-    const error: ApiError = await response.json();
+    const error = await parseJsonResponse<ApiError>(response);
     throw new Error(error.error || 'セッションの作成に失敗しました');
   }
 
-  return response.json();
+  return parseJsonResponse<SessionResponse>(response);
 }
 
 export async function validateSession(sessionId: string): Promise<SessionValidationResponse> {
@@ -84,14 +100,21 @@ export async function validateSession(sessionId: string): Promise<SessionValidat
   });
 
   if (!response.ok) {
-    const error: ApiError = await response.json();
-    return {
-      valid: false,
-      message: error.error || 'セッションの検証に失敗しました',
-    };
+    try {
+      const error = await parseJsonResponse<ApiError>(response);
+      return {
+        valid: false,
+        message: error.error || 'セッションの検証に失敗しました',
+      };
+    } catch {
+      return {
+        valid: false,
+        message: 'セッションの検証に失敗しました',
+      };
+    }
   }
 
-  return response.json();
+  return parseJsonResponse<SessionValidationResponse>(response);
 }
 
 export async function sendMessage(request: ChatRequest): Promise<ChatResponse> {
@@ -108,9 +131,9 @@ export async function sendMessage(request: ChatRequest): Promise<ChatResponse> {
   );
 
   if (!response.ok) {
-    const error: ApiError = await response.json();
+    const error = await parseJsonResponse<ApiError>(response);
     throw new Error(error.error || 'メッセージの送信に失敗しました');
   }
 
-  return response.json();
+  return parseJsonResponse<ChatResponse>(response);
 }
