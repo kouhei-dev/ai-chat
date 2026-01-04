@@ -252,6 +252,7 @@ model Message {
 - ESLint + Prettierでコード品質を維持
 - コンポーネントは関数コンポーネント + hooksパターン
 - **実装後は必ず `npm run lint:fix` と `npm run format` を実行すること**
+- `npm run build` やテストの通過も確認すること
 
 ### コミットメッセージ
 - 日本語で記述
