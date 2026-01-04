@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * セキュリティヘッダーを設定するミドルウェア
+ * セキュリティヘッダーを設定するプロキシ
  *
  * 設定するヘッダー:
  * - X-Content-Type-Options: MIMEタイプスニッフィングを防止
@@ -13,7 +13,7 @@ import type { NextRequest } from 'next/server';
  * - Strict-Transport-Security: HTTPS接続を強制（本番環境）
  * - Permissions-Policy: ブラウザ機能の使用を制限
  */
-export function middleware(_request: NextRequest) {
+export function proxy(_request: NextRequest) {
   const response = NextResponse.next();
 
   // MIMEタイプスニッフィングを防止
@@ -94,7 +94,7 @@ export function middleware(_request: NextRequest) {
   return response;
 }
 
-// ミドルウェアを適用するパスを設定
+// プロキシを適用するパスを設定
 // 静的ファイル（_next/static, _next/image, favicon.ico）は除外
 export const config = {
   matcher: [
