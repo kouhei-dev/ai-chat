@@ -203,11 +203,15 @@
 - [x] ボタン・入力フィールドにaria-label追加
 - [x] キーボードナビゲーション対応（メッセージ履歴）
 
-#### セキュリティヘッダー
-- [ ] Next.js middlewareでセキュリティヘッダー設定
+#### セキュリティヘッダー ✅ 完了
+- [x] Next.js middlewareでセキュリティヘッダー設定
   - X-Content-Type-Options
   - X-Frame-Options
   - Content-Security-Policy
+  - Referrer-Policy
+  - X-DNS-Prefetch-Control
+  - Strict-Transport-Security（本番環境）
+  - Permissions-Policy
 
 #### 運用・監視
 - [ ] 構造化ログ出力（JSON形式、GCP向け）
