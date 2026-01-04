@@ -58,7 +58,7 @@ describe('エッジケーステスト', () => {
 
       const textarea = screen.getByPlaceholderText('メッセージを入力...');
       fireEvent.change(textarea, { target: { value: maxLengthMessage } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       await waitFor(() => {
         expect(screen.getByText('長いメッセージを受け取りました。')).toBeInTheDocument();
@@ -87,7 +87,7 @@ describe('エッジケーステスト', () => {
 
       const textarea = screen.getByPlaceholderText('メッセージを入力...');
       fireEvent.change(textarea, { target: { value: 'テスト' } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       await waitFor(() => {
         expect(screen.getByText(longResponse)).toBeInTheDocument();
@@ -110,7 +110,7 @@ describe('エッジケーステスト', () => {
 
       const textarea = screen.getByPlaceholderText('メッセージを入力...');
       fireEvent.change(textarea, { target: { value: mixedMessage } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       await waitFor(() => {
         expect(screen.getByText('混在メッセージを受け取りました。')).toBeInTheDocument();
@@ -136,7 +136,7 @@ describe('エッジケーステスト', () => {
 
       // 最初のメッセージを送信
       fireEvent.change(textarea, { target: { value: 'メッセージ1' } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       await waitFor(() => {
         expect(chatApi.sendMessage).toHaveBeenCalledTimes(1);
@@ -144,7 +144,7 @@ describe('エッジケーステスト', () => {
 
       // すぐに2回目を試みる（スロットル中）
       fireEvent.change(textarea, { target: { value: 'メッセージ2' } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       // 2回目は送信されない
       expect(chatApi.sendMessage).toHaveBeenCalledTimes(1);
@@ -167,7 +167,7 @@ describe('エッジケーステスト', () => {
 
       // 最初のメッセージを送信
       fireEvent.change(textarea, { target: { value: 'メッセージ1' } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       await waitFor(() => {
         expect(chatApi.sendMessage).toHaveBeenCalledTimes(1);
@@ -180,7 +180,7 @@ describe('エッジケーステスト', () => {
 
       // 2回目のメッセージを送信
       fireEvent.change(textarea, { target: { value: 'メッセージ2' } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       await waitFor(() => {
         expect(chatApi.sendMessage).toHaveBeenCalledTimes(2);
@@ -205,7 +205,7 @@ describe('エッジケーステスト', () => {
 
       const textarea = screen.getByPlaceholderText('メッセージを入力...');
       fireEvent.change(textarea, { target: { value: 'テスト' } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       // ローディング中はローディング表示が出る（入力無効はChatContainer.test.tsxでテスト済み）
       await waitFor(() => {
@@ -245,7 +245,7 @@ describe('エッジケーステスト', () => {
 
       const textarea = screen.getByPlaceholderText('メッセージを入力...');
       fireEvent.change(textarea, { target: { value: emojiMessage } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       await waitFor(() => {
         expect(screen.getByText(emojiMessage)).toBeInTheDocument();
@@ -269,7 +269,7 @@ describe('エッジケーステスト', () => {
 
       const textarea = screen.getByPlaceholderText('メッセージを入力...');
       fireEvent.change(textarea, { target: { value: htmlMessage } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       await waitFor(() => {
         // HTMLがそのまま表示される（実行されない）
@@ -293,7 +293,7 @@ describe('エッジケーステスト', () => {
 
       const textarea = screen.getByPlaceholderText('メッセージを入力...');
       fireEvent.change(textarea, { target: { value: multilineMessage } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       // 改行を含むテキストは関数マッチャーで確認
       await waitFor(() => {
@@ -324,7 +324,7 @@ describe('エッジケーステスト', () => {
 
       const textarea = screen.getByPlaceholderText('メッセージを入力...');
       fireEvent.change(textarea, { target: { value: 'テスト' } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       await waitFor(() => {
         expect(
@@ -344,7 +344,7 @@ describe('エッジケーステスト', () => {
 
       const textarea = screen.getByPlaceholderText('メッセージを入力...');
       fireEvent.change(textarea, { target: { value: 'テスト' } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       await waitFor(() => {
         expect(screen.getByText('メッセージの送信に失敗しました')).toBeInTheDocument();
@@ -371,21 +371,21 @@ describe('エッジケーステスト', () => {
 
       // 1回目のエラー
       fireEvent.change(textarea, { target: { value: 'テスト1' } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       await waitFor(() => {
         expect(screen.getByText('エラー1')).toBeInTheDocument();
       });
 
       // 再送信（2回目のエラー）
-      fireEvent.click(screen.getByRole('button', { name: '再送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /再送信/ }));
 
       await waitFor(() => {
         expect(screen.getByText('エラー2')).toBeInTheDocument();
       });
 
       // 再送信（3回目で成功）
-      fireEvent.click(screen.getByRole('button', { name: '再送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /再送信/ }));
 
       await waitFor(() => {
         expect(screen.getByText('3回目で成功')).toBeInTheDocument();
@@ -419,7 +419,7 @@ describe('エッジケーステスト', () => {
       // メッセージ送信も可能
       const textarea = screen.getByPlaceholderText('メッセージを入力...');
       fireEvent.change(textarea, { target: { value: 'テスト' } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       await waitFor(() => {
         expect(screen.getByText('応答')).toBeInTheDocument();
@@ -441,7 +441,7 @@ describe('エッジケーステスト', () => {
       fireEvent.change(textarea, { target: { value: '   ' } });
 
       // 送信ボタンは無効のまま
-      expect(screen.getByRole('button', { name: '送信' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: /メッセージを送信/ })).toBeDisabled();
     });
 
     it('タブ文字のみのメッセージは送信されない', async () => {
@@ -455,7 +455,7 @@ describe('エッジケーステスト', () => {
       fireEvent.change(textarea, { target: { value: '\t\t\t' } });
 
       // 送信ボタンは無効のまま
-      expect(screen.getByRole('button', { name: '送信' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: /メッセージを送信/ })).toBeDisabled();
     });
 
     it('1文字のメッセージを送信できる', async () => {
@@ -473,7 +473,7 @@ describe('エッジケーステスト', () => {
 
       const textarea = screen.getByPlaceholderText('メッセージを入力...');
       fireEvent.change(textarea, { target: { value: 'あ' } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       await waitFor(() => {
         expect(screen.getByText('あ')).toBeInTheDocument();

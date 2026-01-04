@@ -81,16 +81,28 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
             disabled={isLoading}
             maxLength={MAX_MESSAGE_LENGTH}
             rows={1}
+            aria-label="メッセージ入力欄"
+            aria-describedby="input-hint character-count"
             className="w-full resize-none rounded-xl border border-[var(--input-border)] bg-[var(--input-bg)] px-4 py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-[var(--input-focus)] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
-        <Button type="submit" isLoading={isLoading} disabled={!canSend}>
+        <Button
+          type="submit"
+          isLoading={isLoading}
+          disabled={!canSend}
+          aria-label={isLoading ? 'メッセージを送信中' : 'メッセージを送信'}
+        >
           送信
         </Button>
       </div>
       <div className="flex justify-between items-center max-w-4xl mx-auto mt-2">
-        <p className="text-xs text-[var(--secondary)]">Enterで送信 / Shift+Enterで改行</p>
+        <p id="input-hint" className="text-xs text-[var(--secondary)]">
+          Enterで送信 / Shift+Enterで改行
+        </p>
         <p
+          id="character-count"
+          aria-live="polite"
+          aria-atomic="true"
           className={`text-xs ${
             isAtLimit
               ? 'text-red-600 font-medium'

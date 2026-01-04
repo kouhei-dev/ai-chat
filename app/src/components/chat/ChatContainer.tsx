@@ -142,13 +142,18 @@ export function ChatContainer() {
 
       {/* エラー表示 */}
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 mx-4 mt-4 rounded">
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="bg-red-50 border-l-4 border-red-500 p-4 mx-4 mt-4 rounded"
+        >
           <div className="flex items-center justify-between gap-4">
             <p className="text-red-700 text-sm flex-1">{error}</p>
             {failedMessage && (
               <button
                 onClick={handleRetry}
                 disabled={isLoading}
+                aria-label="失敗したメッセージを再送信"
                 className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
               >
                 再送信

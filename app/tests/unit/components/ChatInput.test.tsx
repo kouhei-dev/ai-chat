@@ -19,12 +19,12 @@ describe('ChatInput', () => {
 
   it('送信ボタンをレンダリングする', () => {
     render(<ChatInput onSend={vi.fn()} />);
-    expect(screen.getByRole('button', { name: '送信' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /メッセージを送信/ })).toBeInTheDocument();
   });
 
   it('空のメッセージでは送信ボタンが無効', () => {
     render(<ChatInput onSend={vi.fn()} />);
-    expect(screen.getByRole('button', { name: '送信' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /メッセージを送信/ })).toBeDisabled();
   });
 
   it('メッセージ入力後に送信ボタンが有効になる', async () => {
@@ -33,7 +33,7 @@ describe('ChatInput', () => {
     const textarea = screen.getByPlaceholderText('メッセージを入力...');
 
     await userEvent.type(textarea, 'こんにちは');
-    expect(screen.getByRole('button', { name: '送信' })).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: /メッセージを送信/ })).not.toBeDisabled();
   });
 
   it('送信後に入力フィールドがクリアされる', async () => {
@@ -43,7 +43,7 @@ describe('ChatInput', () => {
     const textarea = screen.getByPlaceholderText('メッセージを入力...') as HTMLTextAreaElement;
 
     await userEvent.type(textarea, 'テストメッセージ');
-    await userEvent.click(screen.getByRole('button', { name: '送信' }));
+    await userEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
     expect(onSend).toHaveBeenCalledWith('テストメッセージ');
     expect(textarea.value).toBe('');
@@ -85,7 +85,7 @@ describe('ChatInput', () => {
     const textarea = screen.getByPlaceholderText('メッセージを入力...');
 
     await userEvent.type(textarea, '   ');
-    await userEvent.click(screen.getByRole('button', { name: '送信' }));
+    await userEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
     expect(onSend).not.toHaveBeenCalled();
   });
@@ -160,12 +160,12 @@ describe('ChatInput', () => {
 
       // 最初のメッセージを送信
       await userEvent.type(textarea, 'メッセージ1');
-      await userEvent.click(screen.getByRole('button', { name: '送信' }));
+      await userEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       expect(onSend).toHaveBeenCalledTimes(1);
 
       // 送信直後は送信ボタンが無効
-      expect(screen.getByRole('button', { name: '送信' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: /メッセージを送信/ })).toBeDisabled();
     });
 
     it('スロットル時間経過後に送信ボタンが有効になる', async () => {
@@ -175,12 +175,12 @@ describe('ChatInput', () => {
 
       // メッセージを入力して送信
       fireEvent.change(textarea, { target: { value: 'メッセージ1' } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       expect(onSend).toHaveBeenCalledTimes(1);
 
       // 送信直後は無効
-      expect(screen.getByRole('button', { name: '送信' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: /メッセージを送信/ })).toBeDisabled();
 
       // 新しいメッセージを入力
       fireEvent.change(textarea, { target: { value: 'メッセージ2' } });
@@ -191,7 +191,7 @@ describe('ChatInput', () => {
       });
 
       // 有効になる
-      expect(screen.getByRole('button', { name: '送信' })).not.toBeDisabled();
+      expect(screen.getByRole('button', { name: /メッセージを送信/ })).not.toBeDisabled();
     });
 
     it('スロットル中は連続して送信できない', async () => {
@@ -201,13 +201,13 @@ describe('ChatInput', () => {
 
       // 最初のメッセージを送信
       fireEvent.change(textarea, { target: { value: 'メッセージ1' } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       expect(onSend).toHaveBeenCalledTimes(1);
 
       // すぐに2回目の送信を試みる
       fireEvent.change(textarea, { target: { value: 'メッセージ2' } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       // 2回目は送信されない
       expect(onSend).toHaveBeenCalledTimes(1);
@@ -220,7 +220,7 @@ describe('ChatInput', () => {
 
       // 最初のメッセージを送信
       fireEvent.change(textarea, { target: { value: 'メッセージ1' } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       expect(onSend).toHaveBeenCalledTimes(1);
       expect(onSend).toHaveBeenLastCalledWith('メッセージ1');
@@ -232,7 +232,7 @@ describe('ChatInput', () => {
 
       // 2回目のメッセージを送信
       fireEvent.change(textarea, { target: { value: 'メッセージ2' } });
-      fireEvent.click(screen.getByRole('button', { name: '送信' }));
+      fireEvent.click(screen.getByRole('button', { name: /メッセージを送信/ }));
 
       expect(onSend).toHaveBeenCalledTimes(2);
       expect(onSend).toHaveBeenLastCalledWith('メッセージ2');
