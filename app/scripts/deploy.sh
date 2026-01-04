@@ -97,6 +97,14 @@ ENV_VARS="${ENV_VARS},DATABASE_URL=${DATABASE_URL}"
 ENV_VARS="${ENV_VARS},ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}"
 ENV_VARS="${ENV_VARS},CLEANUP_SECRET=${CLEANUP_SECRET}"
 
+# オプション: Sentryエラー追跡
+if [ -n "$SENTRY_DSN" ]; then
+    log_info "Sentryエラー追跡: 有効"
+    ENV_VARS="${ENV_VARS},SENTRY_DSN=${SENTRY_DSN}"
+else
+    log_info "Sentryエラー追跡: 無効（SENTRY_DSN未設定）"
+fi
+
 # Cloud Runにデプロイ
 log_info "Cloud Runにデプロイ中..."
 gcloud run deploy "$SERVICE_NAME" \

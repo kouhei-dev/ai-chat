@@ -213,10 +213,10 @@
   - Strict-Transport-Security（本番環境）
   - Permissions-Policy
 
-#### 運用・監視
-- [ ] 構造化ログ出力（JSON形式、GCP向け）
-- [ ] リクエスト/レスポンスタイム計測
-- [ ] エラー追跡（Sentry等の導入検討）
+#### 運用・監視 ✅ 完了
+- [x] 構造化ログ出力（JSON形式、GCP向け）
+- [x] リクエスト/レスポンスタイム計測
+- [x] エラー追跡（Sentry等の導入検討）
 
 #### ドキュメント
 - [ ] APIドキュメント（OpenAPI/Swagger）

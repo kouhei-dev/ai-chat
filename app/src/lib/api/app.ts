@@ -8,6 +8,8 @@ import {
 import { generateResponse } from '@/lib/mastra/agent';
 import { prisma } from '@/lib/db/prisma';
 import { ErrorCodes, createErrorResponse } from './errors';
+import { loggingMiddleware, errorHandlerMiddleware } from './middleware';
+import { logger } from '@/lib/logger';
 
 // 定数
 const MAX_MESSAGE_LENGTH = 400; // メッセージの最大文字数
@@ -26,6 +28,10 @@ function isValidObjectId(value: string): boolean {
 
 export const app = new Hono().basePath('/api');
 
+// ミドルウェアの適用（順序重要：エラーハンドラ → ロギング）
+app.use('*', errorHandlerMiddleware);
+app.use('*', loggingMiddleware);
+
 // Health check endpoint with database connection verification
 app.get('/health', async (c) => {
   const startTime = Date.now();
@@ -43,7 +49,7 @@ app.get('/health', async (c) => {
     dbStatus = 'connected';
   } catch (error) {
     dbError = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Health check - DB connection error:', dbError);
+    logger.logDbConnection('error', dbError);
   }
 
   const responseTime = Date.now() - startTime;
@@ -75,7 +81,7 @@ app.post('/session', async (c) => {
     const { sessionId, expiresAt } = await createSession();
     return c.json({ sessionId, expiresAt: expiresAt.toISOString() });
   } catch (error) {
-    console.error('Session creation error:', error);
+    logger.logError(error, 'Session creation error');
     return c.json(
       createErrorResponse(ErrorCodes.SESSION_CREATE_FAILED, 'セッションの作成に失敗しました'),
       500
@@ -106,7 +112,7 @@ app.get('/session/:sessionId', async (c) => {
       expiresAt: result.session!.expiresAt.toISOString(),
     });
   } catch (error) {
-    console.error('Session validation error:', error);
+    logger.logError(error, 'Session validation error');
     return c.json(
       createErrorResponse(ErrorCodes.SESSION_VALIDATE_FAILED, 'セッションの検証に失敗しました'),
       500
@@ -264,7 +270,7 @@ app.post('/chat', async (c) => {
       sessionId: sessionId,
     });
   } catch (error) {
-    console.error('Chat error:', error);
+    logger.logError(error, 'Chat error');
     return c.json(
       createErrorResponse(ErrorCodes.CHAT_ERROR, 'チャット処理中にエラーが発生しました'),
       500
@@ -282,7 +288,7 @@ app.post('/cleanup', async (c) => {
     const cleanupSecret = process.env.CLEANUP_SECRET;
 
     if (!cleanupSecret) {
-      console.error('CLEANUP_SECRET is not configured');
+      logger.error('CLEANUP_SECRET is not configured');
       return c.json(
         createErrorResponse(
           ErrorCodes.CLEANUP_NOT_CONFIGURED,
@@ -302,12 +308,13 @@ app.post('/cleanup', async (c) => {
     }
 
     const deletedCount = await cleanupExpiredSessions();
+    logger.info('Cleanup completed', { deletedCount });
     return c.json({
       message: '期限切れセッションを削除しました',
       deletedCount,
     });
   } catch (error) {
-    console.error('Cleanup error:', error);
+    logger.logError(error, 'Cleanup error');
     return c.json(
       createErrorResponse(ErrorCodes.CLEANUP_ERROR, 'クリーンアップ処理中にエラーが発生しました'),
       500

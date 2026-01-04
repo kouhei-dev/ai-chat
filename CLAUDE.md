@@ -280,6 +280,13 @@ SESSION_EXPIRY_HOURS=24
 # 本番環境では強力なランダム文字列を設定
 CLEANUP_SECRET="your-cleanup-secret"
 
+# エラー追跡（オプショナル）
+# Sentryを使用する場合はDSNを設定
+# SENTRY_DSN=""
+
+# GCP設定（Cloud Run環境では自動設定されるため、ローカル開発用）
+# GOOGLE_CLOUD_PROJECT=""
+
 # アプリケーション
 NODE_ENV="development"
 ```
