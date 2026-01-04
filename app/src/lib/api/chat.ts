@@ -22,6 +22,23 @@ export interface ChatResponse {
   sessionId: string;
 }
 
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: string;
+}
+
+export interface Conversation {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  messages: ConversationMessage[];
+}
+
+export interface ConversationsResponse {
+  conversations: Conversation[];
+}
+
 export interface ApiError {
   error: string;
   code?: string;
@@ -136,4 +153,23 @@ export async function sendMessage(request: ChatRequest): Promise<ChatResponse> {
   }
 
   return parseJsonResponse<ChatResponse>(response);
+}
+
+export async function getConversations(sessionId: string): Promise<ConversationsResponse> {
+  const response = await fetchWithTimeout(
+    `${API_BASE}/conversations?sessionId=${encodeURIComponent(sessionId)}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const error = await parseJsonResponse<ApiError>(response);
+    throw new Error(error.error || '会話履歴の取得に失敗しました');
+  }
+
+  return parseJsonResponse<ConversationsResponse>(response);
 }

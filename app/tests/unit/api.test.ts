@@ -30,6 +30,7 @@ const { mockPrisma } = vi.hoisted(() => ({
     conversation: {
       findUnique: vi.fn(),
       findFirst: vi.fn(),
+      findMany: vi.fn(),
       create: vi.fn(),
     },
     message: {
@@ -446,6 +447,114 @@ describe('API Endpoints', () => {
       expect(res.status).toBe(200);
       expect(json.message).toBe('期限切れセッションを削除しました');
       expect(json.deletedCount).toBe(5);
+    });
+  });
+
+  describe('GET /api/conversations', () => {
+    const validSessionId = '550e8400-e29b-41d4-a716-446655440000';
+
+    beforeEach(() => {
+      mockValidateSession.mockResolvedValue({
+        valid: true,
+        session: {
+          sessionId: validSessionId,
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        },
+      });
+      mockGetSessionById.mockResolvedValue({
+        id: 'db-session-id',
+        sessionId: validSessionId,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      });
+    });
+
+    it('セッションIDが無い場合400を返す', async () => {
+      const res = await client.api.conversations.$get({
+        query: {},
+      });
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.error).toBe('セッションIDは必須です');
+    });
+
+    it('不正な形式のセッションIDに対して400を返す', async () => {
+      const res = await client.api.conversations.$get({
+        query: { sessionId: 'invalid-session-id' },
+      });
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.error).toBe('セッションIDの形式が不正です');
+    });
+
+    it('無効なセッションに対して401を返す', async () => {
+      mockValidateSession.mockResolvedValue({
+        valid: false,
+        message: 'セッションが無効です',
+      });
+
+      const res = await client.api.conversations.$get({
+        query: { sessionId: validSessionId },
+      });
+      const json = await res.json();
+
+      expect(res.status).toBe(401);
+      expect(json.error).toBe('セッションが無効です');
+    });
+
+    it('セッションが見つからない場合404を返す', async () => {
+      mockGetSessionById.mockResolvedValue(null);
+
+      const res = await client.api.conversations.$get({
+        query: { sessionId: validSessionId },
+      });
+      const json = await res.json();
+
+      expect(res.status).toBe(404);
+      expect(json.error).toBe('セッションが見つかりません');
+    });
+
+    it('会話履歴を取得できる', async () => {
+      const now = new Date();
+      mockPrisma.conversation.findMany.mockResolvedValue([
+        {
+          id: 'conv-1',
+          sessionId: 'db-session-id',
+          createdAt: now,
+          updatedAt: now,
+          messages: [
+            { role: 'user', content: 'こんにちは', createdAt: now },
+            { role: 'assistant', content: 'こんにちは！', createdAt: now },
+          ],
+        },
+      ]);
+
+      const res = await client.api.conversations.$get({
+        query: { sessionId: validSessionId },
+      });
+      const json = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(json.conversations).toHaveLength(1);
+      expect(json.conversations[0].id).toBe('conv-1');
+      expect(json.conversations[0].messages).toHaveLength(2);
+      expect(json.conversations[0].messages[0].role).toBe('user');
+      expect(json.conversations[0].messages[0].content).toBe('こんにちは');
+      expect(json.conversations[0].messages[1].role).toBe('assistant');
+      expect(json.conversations[0].messages[1].content).toBe('こんにちは！');
+    });
+
+    it('会話がない場合は空の配列を返す', async () => {
+      mockPrisma.conversation.findMany.mockResolvedValue([]);
+
+      const res = await client.api.conversations.$get({
+        query: { sessionId: validSessionId },
+      });
+      const json = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(json.conversations).toHaveLength(0);
     });
   });
 });

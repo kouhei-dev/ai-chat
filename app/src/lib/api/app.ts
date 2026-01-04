@@ -278,6 +278,90 @@ app.post('/chat', async (c) => {
   }
 });
 
+// 定数: 会話履歴取得の最大メッセージ数
+const MAX_MESSAGES_PER_CONVERSATION = 100;
+
+// GET /api/conversations - 会話履歴取得
+app.get('/conversations', async (c) => {
+  try {
+    const sessionId = c.req.query('sessionId');
+
+    // セッションIDのバリデーション
+    if (!sessionId || typeof sessionId !== 'string') {
+      return c.json(
+        createErrorResponse(ErrorCodes.MISSING_SESSION_ID, 'セッションIDは必須です'),
+        400
+      );
+    }
+
+    if (!isValidUUID(sessionId)) {
+      return c.json(
+        createErrorResponse(ErrorCodes.INVALID_SESSION_ID_FORMAT, 'セッションIDの形式が不正です'),
+        400
+      );
+    }
+
+    // セッション検証
+    const sessionResult = await validateSession(sessionId);
+    if (!sessionResult.valid) {
+      return c.json(
+        createErrorResponse(
+          ErrorCodes.SESSION_INVALID,
+          sessionResult.message || 'セッションが無効または期限切れです'
+        ),
+        401
+      );
+    }
+
+    // セッション情報を取得
+    const session = await getSessionById(sessionId);
+    if (!session) {
+      return c.json(
+        createErrorResponse(ErrorCodes.SESSION_NOT_FOUND, 'セッションが見つかりません'),
+        404
+      );
+    }
+
+    // 会話履歴を取得（最新順、各会話のメッセージは最大100件）
+    const conversations = await prisma.conversation.findMany({
+      where: {
+        sessionId: session.id,
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' },
+          take: MAX_MESSAGES_PER_CONVERSATION,
+        },
+      },
+    });
+
+    // レスポンス形式に変換
+    const response = {
+      conversations: conversations.map((conv) => ({
+        id: conv.id,
+        createdAt: conv.createdAt.toISOString(),
+        updatedAt: conv.updatedAt.toISOString(),
+        messages: conv.messages.map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+          createdAt: msg.createdAt.toISOString(),
+        })),
+      })),
+    };
+
+    return c.json(response);
+  } catch (error) {
+    logger.logError(error, 'Conversations fetch error');
+    return c.json(
+      createErrorResponse(ErrorCodes.CONVERSATIONS_FETCH_ERROR, '会話履歴の取得に失敗しました'),
+      500
+    );
+  }
+});
+
 // POST /api/cleanup - 期限切れセッションのクリーンアップ
 // Cloud Schedulerから定期実行される想定
 // 認証: Authorization: Bearer <CLEANUP_SECRET> ヘッダーが必要

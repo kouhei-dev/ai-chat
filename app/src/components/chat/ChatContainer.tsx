@@ -5,7 +5,13 @@ import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { Loading } from '../ui/Loading';
 import { Message } from './MessageItem';
-import { createSession, validateSession, sendMessage, SessionResponse } from '@/lib/api/chat';
+import {
+  createSession,
+  validateSession,
+  sendMessage,
+  getConversations,
+  SessionResponse,
+} from '@/lib/api/chat';
 import { safeGetItem, safeSetItem, safeRemoveItem } from '@/lib/storage';
 
 const SESSION_KEY = 'ai-chat-session-id';
@@ -37,6 +43,28 @@ export function ChatContainer() {
         const validation = await validateSession(storedSessionId);
         if (validation.valid) {
           setSessionId(storedSessionId);
+
+          // 会話履歴を取得
+          try {
+            const { conversations } = await getConversations(storedSessionId);
+            if (conversations.length > 0) {
+              // 最新の会話を使用
+              const latestConversation = conversations[0];
+              setConversationId(latestConversation.id);
+
+              // メッセージを復元
+              const restoredMessages: Message[] = latestConversation.messages.map((msg, index) => ({
+                id: `restored-${msg.role}-${index}`,
+                role: msg.role,
+                content: msg.content,
+              }));
+              setMessages(restoredMessages);
+            }
+          } catch (err) {
+            // 履歴取得に失敗しても、セッションは有効なので続行
+            console.warn('会話履歴の取得に失敗しました:', err);
+          }
+
           setIsInitializing(false);
           return;
         }

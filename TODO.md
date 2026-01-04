@@ -135,7 +135,7 @@
 | 3. バックエンド実装 | 完了 | Hono + Mastra + Claude API |
 | 4. フロントエンド実装 | 完了 | React + Tailwind CSS + レスポンシブ対応 |
 | 5. 状態管理・UX改善 | 完了 | フェーズ4で実装済み（セッション管理、状態管理、UX機能） |
-| 6. テスト | 完了 | Vitest（45件）+ Playwright（10件） |
+| 6. テスト | 完了 | Vitest（155件）+ Playwright（10件） |
 | 7. デプロイ準備 | 完了 | Docker + Cloud Run（cloudbuild.yaml, deploy.sh） |
 | 8. ドキュメント・仕上げ | 完了 | README、本番デプロイ、動作確認完了 |
 
@@ -232,4 +232,4 @@
 | CSRF対策 | 未実装 | 悪意あるサイトからの操作 | トークンベース認証導入時に対応 |
 | レート制限 | 未実装（仕様通り） | API濫用の可能性 | 必要時にCloud Run設定で対応 |
 | マルチタブ同期 | 未対応 | 複数タブで状態不整合 | BroadcastChannel API検討 |
-| 会話履歴取得API | 未実装 | ブラウザ再起動で履歴喪失 | GET /api/conversations追加検討 |
+| ~~会話履歴取得API~~ | ~~実装済み~~ | ~~ブラウザ再起動で履歴喪失~~ | ~~GET /api/conversations追加~~ ✅ |
