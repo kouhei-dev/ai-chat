@@ -67,72 +67,14 @@
 
 ## ディレクトリ構成
 
-```
-ai-chat/
-├── CLAUDE.md                   # プロジェクト仕様書
-├── TODO.md                     # 実装計画
-└── app/                        # Next.jsプロジェクト
-    ├── src/
-    │   ├── app/                # Next.js App Router
-    │   │   ├── api/
-    │   │   │   └── [[...route]]/   # Hono APIルート
-    │   │   │       └── route.ts
-    │   │   ├── globals.css
-    │   │   ├── layout.tsx
-    │   │   └── page.tsx
-    │   ├── components/         # UIコンポーネント
-    │   │   ├── chat/
-    │   │   │   ├── ChatContainer.tsx
-    │   │   │   ├── MessageList.tsx
-    │   │   │   ├── MessageItem.tsx
-    │   │   │   └── ChatInput.tsx
-    │   │   └── ui/             # 共通UIコンポーネント
-    │   │       ├── Button.tsx
-    │   │       └── Loading.tsx
-    │   ├── lib/
-    │   │   ├── api/            # APIクライアント・Honoアプリ
-    │   │   │   ├── app.ts      # Honoアプリ定義
-    │   │   │   └── chat.ts     # フロントエンド用APIクライアント
-    │   │   ├── db/             # Prisma関連
-    │   │   │   └── prisma.ts
-    │   │   ├── mastra/         # Mastra設定
-    │   │   │   └── agent.ts
-    │   │   └── session/        # セッション管理
-    │   │       └── index.ts
-    │   └── types/              # 型定義
-    ├── tests/                  # テストファイル
-    │   ├── setup.ts            # テストセットアップ
-    │   ├── unit/               # 単体テスト（Vitest）
-    │   │   ├── session.test.ts
-    │   │   ├── api.test.ts
-    │   │   └── components/
-    │   │       ├── Button.test.tsx
-    │   │       ├── ChatInput.test.tsx
-    │   │       └── MessageItem.test.tsx
-    │   └── e2e/                # E2Eテスト（Playwright）
-    │       └── chat.spec.ts
-    ├── scripts/                # スクリプト
-    │   ├── test-db-connection.ts
-    │   └── deploy.sh           # Cloud Runデプロイスクリプト
-    ├── prisma/
-    │   └── schema.prisma
-    ├── public/
-    ├── .env.example            # 開発環境用環境変数テンプレート
-    ├── .env.production.example # 本番環境用環境変数テンプレート
-    ├── .gitignore
-    ├── .dockerignore
-    ├── .prettierrc
-    ├── eslint.config.mjs
-    ├── next.config.ts
-    ├── package.json
-    ├── postcss.config.mjs
-    ├── tsconfig.json
-    ├── vitest.config.ts        # Vitest設定
-    ├── playwright.config.ts    # Playwright設定
-    ├── Dockerfile              # 本番用Dockerイメージ
-    ├── docker-compose.yml      # ローカル開発用
-    └── cloudbuild.yaml         # Cloud Build設定
-```
+詳細は [docs/architecture.md](docs/architecture.md) を参照。
+
+**主要ディレクトリ:**
+- `app/src/app/` - Next.js App Router（ページ、APIルート）
+- `app/src/components/` - Reactコンポーネント（chat/, ui/）
+- `app/src/lib/` - ライブラリ（api/, db/, mastra/, session/, logger/）
+- `app/tests/` - テスト（unit/, e2e/）
+- `docs/` - ドキュメント（アーキテクチャ図等）
 
 ## データモデル
 

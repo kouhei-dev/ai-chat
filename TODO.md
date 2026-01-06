@@ -218,9 +218,9 @@
 - [x] リクエスト/レスポンスタイム計測
 - [x] エラー追跡（Sentry等の導入検討）
 
-#### ドキュメント
-- [ ] APIドキュメント（OpenAPI/Swagger）
-- [ ] アーキテクチャ図の作成
+#### ドキュメント ✅ 完了
+- [x] APIドキュメント（OpenAPI/Swagger）→ 将来対応予定として計画書作成（docs/api-documentation-plan.md）
+- [x] アーキテクチャ図の作成（docs/architecture.md）
 
 ---
 
