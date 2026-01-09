@@ -414,3 +414,43 @@ docker compose --profile prod up --build
 # アクセス
 open http://localhost:3000
 ```
+
+### 方法4: GitHub Actionsを使用（自動デプロイ）
+
+GitHub Actionsを使用してCI/CDパイプラインを構築できます。
+
+#### ワークフロー
+
+1. **CI (`.github/workflows/ci.yaml`)**
+   - Pull Request作成・更新時、main/developブランチへのpush時に自動実行
+   - リント、フォーマットチェック、単体テスト、E2Eテスト、ビルド確認を実行
+
+2. **Deploy (`.github/workflows/deploy.yaml`)**
+   - mainブランチへのpush時に自動デプロイ
+   - Dockerイメージビルド → Artifact Registry → Cloud Runの流れを自動化
+   - 手動実行も可能
+
+#### セットアップ
+
+詳細な手順は [docs/github-actions-setup.md](docs/github-actions-setup.md) を参照してください。
+
+**概要:**
+
+1. **Workload Identity連携の設定**（Google Cloud側）
+   - Workload Identity Poolとプロバイダーを作成
+   - サービスアカウントを作成し、必要な権限を付与
+   - Artifact Registryリポジトリを作成
+
+2. **GitHub Secretsの設定**（GitHub側）
+   - `GCP_WORKLOAD_IDENTITY_PROVIDER`: Workload Identity Provider ID
+   - `GCP_SERVICE_ACCOUNT`: サービスアカウントメール
+   - `DATABASE_URL`: MongoDB接続URL
+   - `ANTHROPIC_API_KEY`: Anthropic APIキー
+   - `CLEANUP_SECRET`: クリーンアップAPI認証トークン
+   - `SESSION_EXPIRY_HOURS`: セッション有効期限（オプショナル、デフォルト: 24）
+
+3. **自動デプロイの開始**
+   - mainブランチにpushするだけで自動デプロイが実行されます
+
+**手動デプロイ:**
+GitHub ActionsのUIから"Deploy to Cloud Run"ワークフローを手動実行することも可能です。
