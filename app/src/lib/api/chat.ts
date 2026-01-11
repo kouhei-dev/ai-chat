@@ -14,6 +14,8 @@ export interface ChatRequest {
   message: string;
   sessionId: string;
   conversationId?: string;
+  imageData?: string; // base64エンコードされた画像データ
+  imageMimeType?: string; // 画像のMIMEタイプ
 }
 
 export interface ChatResponse {
@@ -25,6 +27,8 @@ export interface ChatResponse {
 export interface ConversationMessage {
   role: 'user' | 'assistant';
   content: string;
+  imageData?: string; // base64エンコードされた画像データ
+  imageMimeType?: string; // 画像のMIMEタイプ
   createdAt: string;
 }
 

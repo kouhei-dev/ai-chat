@@ -12,6 +12,10 @@ export interface Message {
   role: 'user' | 'assistant';
   /** メッセージの内容 */
   content: string;
+  /** 画像データ（base64エンコード） */
+  imageData?: string;
+  /** 画像のMIMEタイプ */
+  imageMimeType?: string;
 }
 
 interface MessageItemProps {
@@ -47,6 +51,14 @@ export const MessageItem = forwardRef<HTMLDivElement, MessageItemProps>(
               : 'bg-[var(--assistant-bubble)] text-[var(--assistant-text)] rounded-bl-md shadow-sm border border-[var(--border)]'
           } ${isFocused ? 'ring-2 ring-[var(--primary)] ring-offset-2' : ''}`}
         >
+          {message.imageData && message.imageMimeType && (
+            <img
+              src={`data:${message.imageMimeType};base64,${message.imageData}`}
+              alt="添付画像"
+              className="rounded-lg mb-2 max-w-full h-auto"
+              style={{ maxHeight: '300px' }}
+            />
+          )}
           <p className="text-sm md:text-base whitespace-pre-wrap break-words">{message.content}</p>
         </div>
       </div>

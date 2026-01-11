@@ -35,6 +35,7 @@
 
 ### コア機能
 - ユーザーがテキストメッセージを送信
+- ユーザーが画像を添付してメッセージを送信（マルチモーダル対応）
 - AIが応答を生成して表示
 - 会話履歴をセッション中のみUI上で表示
 
@@ -59,9 +60,14 @@
   - 有効期限切れの場合は新規セッションを作成
   - セッションに紐づく会話履歴をUI上に表示
 
+### 画像対応
+- **対応形式**: JPEG, PNG, GIF, WebP
+- **最大サイズ**: 5MB
+- **保存方法**: base64エンコードしてMongoDBに保存
+- **Claude APIへの送信**: data URI形式（data:image/jpeg;base64,...）
+
 ### 非機能要件
 - **多言語対応**: 不要
-- **画像認識**: 不要
 - **音声入力**: 不要
 - **会話履歴検索**: 不要
 
@@ -107,6 +113,8 @@ model Message {
   conversation   Conversation @relation(fields: [conversationId], references: [id])
   role           String       // "user" | "assistant"
   content        String
+  imageData      String?      // base64エンコードされた画像データ
+  imageMimeType  String?      // 画像のMIMEタイプ (例: image/jpeg, image/png)
   createdAt      DateTime     @default(now())
 }
 ```
@@ -154,9 +162,13 @@ model Message {
 {
   "message": "こんにちは",
   "sessionId": "550e8400-e29b-41d4-a716-446655440000",
-  "conversationId": "optional-conversation-id"
+  "conversationId": "optional-conversation-id",
+  "imageData": "base64-encoded-image-data",
+  "imageMimeType": "image/jpeg"
 }
 ```
+
+**注意**: `imageData`と`imageMimeType`はオプショナルフィールドです。画像を送信する場合のみ含めます。
 
 **レスポンス**
 ```json
