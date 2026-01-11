@@ -57,6 +57,8 @@ export function ChatContainer() {
                 id: `restored-${msg.role}-${index}`,
                 role: msg.role,
                 content: msg.content,
+                imageData: msg.imageData,
+                imageMimeType: msg.imageMimeType,
               }));
               setMessages(restoredMessages);
             }
@@ -94,7 +96,7 @@ export function ChatContainer() {
   }, [initializeSession]);
 
   // メッセージ送信
-  const handleSend = async (content: string) => {
+  const handleSend = async (content: string, imageData?: string, imageMimeType?: string) => {
     if (!sessionId) {
       setError('セッションが無効です。ページを再読み込みしてください。');
       return;
@@ -105,6 +107,8 @@ export function ChatContainer() {
       id: `user-${Date.now()}`,
       role: 'user',
       content,
+      imageData,
+      imageMimeType,
     };
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
@@ -116,6 +120,8 @@ export function ChatContainer() {
         message: content,
         sessionId,
         conversationId: conversationId || undefined,
+        imageData,
+        imageMimeType,
       });
 
       // 会話IDを保存

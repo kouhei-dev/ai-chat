@@ -15,6 +15,8 @@ import { logger } from '@/lib/logger';
 const MAX_MESSAGE_LENGTH = 400; // メッセージの最大文字数
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const OBJECT_ID_REGEX = /^[0-9a-f]{24}$/i;
+const MAX_IMAGE_SIZE_BASE64 = 7 * 1024 * 1024; // base64で約7MB（元の5MBファイル + base64エンコーディングオーバーヘッド）
+const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 // UUIDv4形式の検証
 function isValidUUID(value: string): boolean {
@@ -134,7 +136,7 @@ app.post('/chat', async (c) => {
       );
     }
 
-    const { message, sessionId, conversationId } = body;
+    const { message, sessionId, conversationId, imageData, imageMimeType } = body;
 
     // メッセージのバリデーション
     if (!message || typeof message !== 'string') {
@@ -179,6 +181,50 @@ app.post('/chat', async (c) => {
       if (typeof conversationId !== 'string' || !isValidObjectId(conversationId)) {
         return c.json(
           createErrorResponse(ErrorCodes.INVALID_CONVERSATION_ID_FORMAT, '会話IDの形式が不正です'),
+          400
+        );
+      }
+    }
+
+    // 画像データのバリデーション（指定された場合）
+    if (imageData !== undefined && imageData !== null) {
+      if (typeof imageData !== 'string') {
+        return c.json(
+          createErrorResponse(ErrorCodes.INVALID_REQUEST_BODY, '画像データの形式が不正です'),
+          400
+        );
+      }
+
+      // MIMEタイプの検証
+      if (!imageMimeType || typeof imageMimeType !== 'string') {
+        return c.json(
+          createErrorResponse(ErrorCodes.INVALID_REQUEST_BODY, '画像のMIMEタイプは必須です'),
+          400
+        );
+      }
+
+      if (!SUPPORTED_IMAGE_TYPES.includes(imageMimeType)) {
+        return c.json(
+          createErrorResponse(
+            ErrorCodes.INVALID_REQUEST_BODY,
+            '対応していない画像形式です。JPEG, PNG, GIF, WebPのいずれかを使用してください'
+          ),
+          400
+        );
+      }
+
+      // base64データサイズの検証
+      if (imageData.length > MAX_IMAGE_SIZE_BASE64) {
+        return c.json(
+          createErrorResponse(ErrorCodes.INVALID_REQUEST_BODY, '画像サイズが大きすぎます（最大5MB）'),
+          400
+        );
+      }
+
+      // base64形式の検証（簡易的なチェック）
+      if (!/^[A-Za-z0-9+/=]+$/.test(imageData)) {
+        return c.json(
+          createErrorResponse(ErrorCodes.INVALID_REQUEST_BODY, '画像データの形式が不正です'),
           400
         );
       }
@@ -243,6 +289,8 @@ app.post('/chat', async (c) => {
         conversationId: conversation.id,
         role: 'user',
         content: message,
+        imageData: imageData || undefined,
+        imageMimeType: imageMimeType || undefined,
       },
     });
 
@@ -250,10 +298,17 @@ app.post('/chat', async (c) => {
     const conversationHistory = conversation.messages.map((msg) => ({
       role: msg.role,
       content: msg.content,
+      imageData: msg.imageData || undefined,
+      imageMimeType: msg.imageMimeType || undefined,
     }));
 
     // AI応答を生成
-    const responseText = await generateResponse(message, conversationHistory);
+    const responseText = await generateResponse(
+      message,
+      conversationHistory,
+      imageData || undefined,
+      imageMimeType || undefined
+    );
 
     // アシスタントメッセージを保存
     await prisma.message.create({
@@ -347,6 +402,8 @@ app.get('/conversations', async (c) => {
         messages: conv.messages.map((msg) => ({
           role: msg.role,
           content: msg.content,
+          imageData: msg.imageData || undefined,
+          imageMimeType: msg.imageMimeType || undefined,
           createdAt: msg.createdAt.toISOString(),
         })),
       })),
